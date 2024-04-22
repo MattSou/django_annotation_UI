@@ -1,0 +1,309 @@
+body {
+  width: 100%;
+  margin: 0 0;
+  height: 100%;
+  position: fixed;
+  display:grid;
+  grid-template: "aside nav" 3%
+  "aside main" 97%
+  / 8% 92%;
+  gap:0;
+}
+
+aside{
+  border-right: black solid 2pt;
+  background-size: 100%;
+  text-align: left;
+  grid-area: aside;
+}
+nav{
+  margin-bottom: -10px;
+  grid-area: nav;
+}
+
+main{
+  grid-area: main;
+}
+
+header.options{
+  padding: 0.2em;
+  height: 80px;
+  z-index: 0;
+  display: flex;
+}
+
+
+button {
+  cursor: pointer;
+}
+
+
+
+[role="tab"] {
+  position: relative;
+  background: white;
+  border-radius: 5px 5px 0 0;
+  border: 1px solid grey;
+  border-bottom: 0;
+  padding: 0.2em;
+}
+
+
+[role="tabpanel"] {
+  padding: 0 0.5em 0.5em 0.7em;
+  border: 1px solid grey;
+  border-radius: 0 0 5px 5px;
+  background: white;
+  max-height: 100%;
+  overflow: auto;
+  z-index:0;
+}
+
+[role="tabpanel"]:focus {
+  border-color: orange;
+  outline: 1px solid orange;
+}
+
+[role="tabpanel"][tabindex="-1"]{
+  display: none;
+}
+
+
+[role="tabpanel"] .gallery {
+  display:grid;
+  /*float: left;*/
+  cursor: pointer;
+  grid-template : repeat(8,90px)
+  / repeat(10, 160px);
+  /*grid-auto-rows: 100px;*/
+  gap: 8px 8px;
+  max-width: fit-content;
+  padding: 0 0.7em 0.5em 0.7em;
+  z-index: "0";
+}
+
+
+.gallery .box {
+  border-radius: 2px;
+  border: 1px solid black;
+  width: 100%;
+  height: 100%;
+}
+
+.gallery .box img {
+  object-fit: contain;
+  height: 100%;
+  width: 100%;
+}
+
+.drag-select {
+  background-color: rgba(20, 137, 189, 0.5);
+}
+
+.box.ui-selected{
+  border: 5px solid rgb(112, 189, 18) !important;
+  box-sizing: border-box;
+}
+
+.ui-selectable-helper { 
+  display: block;
+  border-style: dotted;
+  background-color: rgb(100, 149, 237, 0.5);
+  z-index: 2000;
+ }
+
+.not-intersected{
+  border: 5px solid rgb(189, 18, 18) !important;
+  box-sizing: border-box;
+}
+
+
+#add-category{
+  position: relative;
+  border: none;
+  height: 20px;
+  width: 20px;
+  text-align: center;
+  background: none;
+  align-self:auto;
+}
+
+#choose-category{
+  display: flex;
+  text-align:center;
+}
+
+#choose-category button.selected{
+  font-weight: bold;
+  background-color: rgb(86, 194, 86) !important;
+}
+
+#categories .text{
+  margin-right: 5px;
+}
+
+main ul#categories{
+  list-style: none;
+  display: flex;
+}
+
+#choose-category button.category{
+  position: relative;
+  text-align: center;
+  background: none;
+  border: none;
+  border-right: 1px solid grey;
+  border-top: 2px solid grey;
+  margin-right: 2px;
+  border-radius: 2px;
+  height: 20px;
+}
+
+button.reset{
+  background-color: rgb(37, 185, 185);
+  border: none;
+  box-shadow: inset;
+  height: 20px;
+  text-align: center;
+  width: 130px;
+}
+
+button.reset:hover{
+  border: 1px solid gray;
+  font-weight: bold;
+}
+
+button.add{
+  background-color: rgb(194, 216, 113);
+  border: none;
+  box-shadow: inset;
+  height: 20px;
+  text-align: center;
+  width: 130px;
+}
+
+button.add:hover{
+  border: 1px solid gray;
+  font-weight: bold;
+}
+
+button.delete{
+  background-color: rgb(235, 92, 92);
+  border: none;
+  box-shadow: inset;
+  height: 20px;
+  text-align: center;
+  width: 130px;
+}
+
+button.delete:hover{
+  border: 1px solid gray;
+  font-weight: bold;
+}
+
+
+.sidebar h1{
+  font-size: 10pt;
+  text-align: left;
+  margin: 20px 10px; 
+}
+.sidebar ul#categories a{
+  font-size: 10pt;
+  text-align: left;
+  /*margin: 20px;*/ 
+}
+
+.sidebar ul#categories{
+  padding-left:10px;
+  list-style-type: none;
+  list-style-position: inside;
+  font-size: auto;
+}
+
+aside div{
+  border-bottom: black solid 1pt;
+  border-bottom-width: 1pt;
+}
+
+#create-category[role="dialog"]{
+  align-self: center;
+  width:500px;
+  height: 300px;
+  background-color: white;
+  border: 5px solid black;
+}
+
+[role="dialog"][aria-hidden="true"]{
+  display: none;
+}
+
+
+[role="dialog"][aria-hidden="false"]{
+  position:absolute;
+  z-index: 1055;
+  
+}
+
+#create-category[role="dialog"] iframe{
+  position: absolute;
+  object-fit: contain;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+#delete-category[role="dialog"]{
+  align-self: center;
+  width:500px;
+  height: 300px;
+  background-color: white;
+  border: 5px solid black;
+}
+
+#delete-category[role="dialog"] ul{
+  display: flex;
+  list-style: none;
+}
+
+#delete-category[role="dialog"] button.category{
+  position: relative;
+  text-align: center;
+  background-color: rgb(215, 250, 200);
+  border: none;
+  margin-right: 2px;
+  border-radius: 2px;
+  height: 20px;
+}
+
+#delete-category[role="dialog"] button.category:hover{
+  border: solid 1px black;
+  font-weight: bold;
+}
+
+#delete-category[role="dialog"] button.category.selected-for-delete{
+  border: solid 1px black;
+  font-weight: bold;
+  background-color: rgb(235, 92, 92) !important;
+}
+
+#close-dialog{
+  position:absolute;
+  left: 475px;
+  top : 5px;
+  z-index: 1;
+  background: none;
+  border: none;
+  /*display: none;*/
+}
+/*#close-dialog:hover{
+  display: block;
+}*/
+#close-dialog img{
+  width: 10px;
+  height: 10px;
+  object-fit: contain;
+}
+
+#data-models{
+  display:none;
+}
