@@ -1,0 +1,15 @@
+{% if category_list %}
+    <ul id="categories">
+    <li class="text"> Categories:</li>
+    {% for category in category_list %}
+    <button class="category">
+        <a href="{{ category.get_absolute_url }}">
+        {{ category }}
+        </a>
+    </button>
+    {% endfor %}
+    
+</ul>
+{% else %}
+    <p>There are no categorys available.</p>
+{% endif %}
