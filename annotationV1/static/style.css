@@ -109,7 +109,7 @@ button {
   display: block;
   border-style: dotted;
   background-color: rgb(100, 149, 237, 0.5);
-  z-index: 2000;
+  z-index: 2000 !important;
  }
 
 .not-intersected{

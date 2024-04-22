@@ -14,6 +14,8 @@
     {% load static %}
     <script type="text/javascript" src="{% static 'functions.js'%}"></script> 
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+
 
     {% load static %}
     <link rel="stylesheet" href="{% static 'style.css' %}" />
@@ -85,11 +87,11 @@
             </ul>
           </div>
           <ul id="options-buttons">
-            <button id="reset-selection" class="reset">Reset selection</button>
+            <!--<button id="reset-selection" class="reset">Reset selection</button>-->
             <button id="test-add-category" class="add">Add category</button>
             <button id="delete-category-button" class="delete">Delete category</button>
-            <button id="display-filter" class="filter">filter</button> :
-            nb Images <input type="number" onclick="updateNbImages()" min="1" value="80" id="number-of-images-filter"/>
+            <button onclick="filterVideo()" id="display-filter" class="filter">filter</button> :
+            nb Images <input type="number" onchange="updateNbImages()" min="1" value="80" id="number-of-images-filter"/>
             video <select onchange="filterVideo()" id="video-filter">
               <option value="">--Choose a video</option>
             </select>
@@ -169,7 +171,6 @@
       </div>
     </main>
     <div id="models-data">{{modelsData}}</div>
-    <div class="ui-selectable-helper" style="left: 581px; top: 160px; width: 189px; height: 230px; z-index: 2000;"></div>
     
   </body>
 </html>
