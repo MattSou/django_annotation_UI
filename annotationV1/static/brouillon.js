@@ -487,3 +487,176 @@ promise1
 .then((resultButton)=>{
   console.log(resultButton);
 });
+
+function dragSelect() {
+  const selectables = [];
+  console.log($(".selectable"))
+  $(".selectable").each(function() {
+      const { x, y, width, height } = getElementPosition($(this));
+      selectables.push({ x, y, width, height, elem: $(this)});
+      $(this).data('info', JSON.stringify({ x, y, width, height }));
+  });
+  console.log(selectables);
+
+  
+
+  function checkRectIntersection(r1, r2) {
+      //console.log(r1.x, r1.y, r1)
+      return !(r1.x + r1.width < r2.x ||
+          r2.x + r2.width < r1.x ||
+          r1.y + r1.height < r2.y ||
+          r2.y + r2.height < r1.y);
+  }
+
+  const main_view = $('[role="tabpanel"]#main-view');
+  const gallleryContainer = $('.gallery-container');
+  gallleryContainer.on("pointerdown", createSelectAreaDiv);
+
+  async function createSelectAreaDiv(event) {
+      event.preventDefault();
+      const x = event.pageX + main_view.scrollLeft();
+      const y = event.pageY + main_view.scrollTop();
+      //console.log(x,y);
+      //console.log(event.pageX, event.pageY);
+      console.log(x,y);
+
+      const true_sel = $('<div>').css({
+          position: "absolute",
+          zIndex: "10",
+          width: "0",
+          height: "0",
+          left: x + "px",
+          top: y + "px"
+      });
+
+      const box_sel = $('<div>').css({
+          position: "absolute",
+          zIndex: "10",
+          width: "0",
+          height: "0",
+          left: event.pageX + "px",
+          top: event.pageY + "px"
+      }).addClass("drag-select");
+
+      gallleryContainer.append(true_sel).append(box_sel);
+
+      function checkSelectedUp() {
+          let i=0;
+          const { x, y, height, width } = getElementPosition(true_sel);
+          console.log(width);
+          
+          $.each(selectables, function(_, selectable) {
+              if (checkRectIntersection({ x, y, width, height }, selectable)) {
+                  console.log(i++,{ x, y, width, height }, selectable);
+                  if (!$(selectable.elem).hasClass("intersected")) {
+                      $(selectable.elem).addClass("intersected").removeClass('not-intersected');
+                  } else {
+                      if (height === 0 && width === 0) {
+                          $(selectable.elem).removeClass("intersected").addClass('not-intersected');
+                      }
+                  }
+              } else {
+                  if (!is_key_down('Control')) {
+                      $(selectable.elem).removeClass("intersected").addClass('not-intersected');
+                  }
+              }
+          });
+      }
+
+      function checkSelectedMove() {
+          const { x, y, height, width } = getElementPosition(true_sel);
+          $.each(selectables, function(_, selectable) {
+              if (checkRectIntersection({ x, y, width, height }, selectable)) {
+                  if (!$(selectable.elem).hasClass("intersected")) {
+                      $(selectable.elem).addClass("intersected").removeClass('not-intersected');
+                  }
+              } else {
+                  if (!is_key_down('Control')) {
+                      $(selectable.elem).removeClass("intersected");
+                  }
+              }
+          });
+      }
+      
+
+      function resize(event) {
+          const diffX = event.pageX + main_view.scrollLeft() - x;
+          const diffY = event.pageY + main_view.scrollTop() - y;
+
+          true_sel.css({
+              left: diffX < 0 ? x + diffX + "px" : true_sel.css('left'),
+              top: diffY < 0 ? y + diffY + "px" : true_sel.css('top'),
+              height: Math.abs(diffY) + "px",
+              width: Math.abs(diffX) + "px"
+          });
+
+          box_sel.css({
+              left: diffX < 0 ? x + diffX - main_view.scrollLeft() + "px" : box_sel.css('left'),
+              top: diffY < 0 ? y + diffY - main_view.scrollTop() + "px" : box_sel.css('top'),
+              height: Math.abs(diffY) + "px",
+              width: Math.abs(diffX) + "px"
+          });
+          //console.log($(true_sel).offset().left, $(box_sel).offset().left);
+          checkSelectedMove(); // extra line 1
+      }
+      function addEventListenerOnce(element, event, handler) {
+          // Fonction de gestionnaire d'événements qui supprime l'événement après son déclenchement
+          function onceHandler(event) {
+              handler(event);
+              $(element).off(event, onceHandler); // Supprime le gestionnaire d'événements après qu'il a été déclenché
+          }
+      
+          // Ajoute le gestionnaire d'événements
+          $(element).on(event, onceHandler);
+      }
+
+      gallleryContainer.on("pointermove", resize);
+      /*gallleryContainer.on("pointerup", function() {
+          gallleryContainer.off("pointermove", resize);
+          //console.log(true_sel);
+          checkSelectedUp();
+          true_sel.remove();
+          box_sel.remove();
+      }//, { once: true }
+  );*/
+      addEventListenerOnce(gallleryContainer, "pointerup", ()=>{
+          gallleryContainer.off("pointermove", resize);
+          //console.log(true_sel);
+          checkSelectedUp();
+          true_sel.remove();
+          box_sel.remove();})
+  }
+
+  const is_key_down = (() => {
+      const state = {};
+
+      $(window).on('keyup', (e) => state[e.key] = false);
+      $(window).on('keydown', (e) => state[e.key] = true);
+
+      return (key) => state.hasOwnProperty(key) && state[key] || false;
+  })();
+}
+
+function dragSelect2(){
+  const ds = new DragSelect({
+      selectables: $(".selectable"),
+    });
+    
+    ds.subscribe("DS:end", (e) => {
+      console.log(e);
+    });
+}
+
+
+function getElementPosition(element) {
+  const offset = element.position();
+  const width = element.outerWidth();
+  const height = element.outerHeight();
+
+  return {
+      x: offset.left,
+      y: offset.top,
+      width: width,
+      height: height
+  };
+}

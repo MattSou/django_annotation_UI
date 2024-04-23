@@ -1,7 +1,36 @@
 let modelsDataToActualize;
 let currentVideo;
 let nbImages = $("#number-of-images-filter").val();
-console.log($("#number-of-images-filter"));
+
+const colorDict = {
+    0: '#2080d8',
+    1: '#e317b7',
+    2: '#ec7456',
+    3: '#ceb012',
+    4: '#48da85',
+    5: 'light-orange',
+    6: 'light-pink',
+    7: 'pink',
+    8: 'brown',
+    9: 'black',
+    10: 'cyan',
+    11: 'grey',
+    12: 'light-blue',
+    13: 'light-yellow',
+    14: 'light-purple',
+}
+
+
+let categoryColors = {};
+
+function generateCategoryColors() {
+    const categories = modelsDataToActualize.category;
+    $.each(categories, function(_, category) {
+        categoryColors[category.name] = colorDict[_];
+    }
+    );
+}
+
 
 function waitForEl(selector, callback) {
     if ($(selector).length) {
@@ -17,6 +46,7 @@ function waitForEl(selector, callback) {
   
 $(document).ready(function (){
     modelsDataToActualize = JSON.parse($("#models-data").text());
+    //console.log(modelsDataToActualize.keyFrame.filter(function (kf) { return kf.name == "fr2_20220421T224335_s2998_f0"}));
     nbImages = $("#number-of-images-filter").val();
     generatefullHTML();
     
@@ -43,40 +73,71 @@ function appendImages(images, container) {
 function fetchVideos(){
     let videos = modelsDataToActualize.video
     $.each(videos, function (_, video) { 
-        console.log($("select#video_filter"));
+        //console.log($("select#video_filter"));
         $("select#video-filter").append($('<option>').attr('value', video.code).text(video.name));
     });
     
 }
 
 function filterVideo(){
-    console.log($("select#video-filter").prop('selectedIndex'));
+    //console.log($("select#video-filter").prop('selectedIndex'));
     if (!($("select#video-filter").val()==="")){
         currentVideo = $("select#video-filter").val();
-        console.log(currentVideo);
+        //console.log(currentVideo);
         $('#main-view .gallery').empty();
         let c =0;
-        $.each(modelsDataToActualize.keyFrame, function (_, kf) { 
-            if (kf.video_id === currentVideo){
-                c++;
-            $('#main-view .gallery').append($('<div>').addClass('box selectable').append($('<img>').attr('src', kf.path)));
-            }
-            
-            if (c==nbImages){
-                return false;
-            }
-            
+        let listKf = modelsDataToActualize.keyFrame.filter(function (kf) {
+            return kf.video_id === currentVideo;
         });
+        listKf.sort(function(a, b) {
+            return a.timecode.localeCompare(b.timecode);
+        })
+        listKf = listKf.slice(0, nbImages);
+        
+        //console.log(listKf);
+        const existingAnnotations = modelsDataToActualize.annotations;
+        //console.log(existingAnnotations);
+        listKf = listKf.map(function (kf) {
+            let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
+            //console.log(kf, annot);
+            //kf.category = annot.map(function(annot){return annot.category});
+            return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
+            });
+        //console.log(listKf);
+        const othernbImages = nbImages-1;
+        $('#main-view .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
+        console.log($('#main-view .gallery').css('grid-template'));
+        $.each((listKf), function (_, kf) { 
+            //console.log(kf.category.map(function(cat){return 'youpi'}));
+            $('#main-view .gallery').append($('<div>').addClass('box selectable').append(
+                $('<img>').attr('src', kf.path)).append(
+                    $('<ul>').addClass('img-label').append(
+                        kf.category.map(createLabelList)
+                        )
+                    )
+                )
+            }
+        );
+        
+        
+    };
         dragSelect3();
+        createSvgLabel();
         //appendImages(list_images, $('#main-view .gallery'));
         observer.observe();
-    }
-    
 }
+
+function createLabelList(cat){
+    const color = categoryColors[cat];
+    console.log(color, cat)
+    return $('<li>').append(createSvgLabel(cat).css({'fill': color, 'stroke': color}))
+                    .append($('<button>').addClass('label').attr('id', cat).text(cat).css({'background-color': color}));
+}
+
 
 function updateNbImages(){
     nbImages = $("#number-of-images-filter").val();
-    console.log(nbImages);
+    //console.log(nbImages);
 }
 
 
@@ -94,179 +155,6 @@ function dragSelect3() {
     $( "#selectable" ).selectable({appendTo: $("#main-view .gallery")});
   }
 
-
-function dragSelect2(){
-    const ds = new DragSelect({
-        selectables: $(".selectable"),
-      });
-      
-      ds.subscribe("DS:end", (e) => {
-        console.log(e);
-      });
-}
-
-
-function getElementPosition(element) {
-    const offset = element.position();
-    const width = element.outerWidth();
-    const height = element.outerHeight();
-
-    return {
-        x: offset.left,
-        y: offset.top,
-        width: width,
-        height: height
-    };
-}
-
-function dragSelect() {
-    const selectables = [];
-    console.log($(".selectable"))
-    $(".selectable").each(function() {
-        const { x, y, width, height } = getElementPosition($(this));
-        selectables.push({ x, y, width, height, elem: $(this)});
-        $(this).data('info', JSON.stringify({ x, y, width, height }));
-    });
-    console.log(selectables);
-
-    
-
-    function checkRectIntersection(r1, r2) {
-        //console.log(r1.x, r1.y, r1)
-        return !(r1.x + r1.width < r2.x ||
-            r2.x + r2.width < r1.x ||
-            r1.y + r1.height < r2.y ||
-            r2.y + r2.height < r1.y);
-    }
-
-    const main_view = $('[role="tabpanel"]#main-view');
-    const gallleryContainer = $('.gallery-container');
-    gallleryContainer.on("pointerdown", createSelectAreaDiv);
-
-    async function createSelectAreaDiv(event) {
-        event.preventDefault();
-        const x = event.pageX + main_view.scrollLeft();
-        const y = event.pageY + main_view.scrollTop();
-        //console.log(x,y);
-        //console.log(event.pageX, event.pageY);
-        console.log(x,y);
-
-        const true_sel = $('<div>').css({
-            position: "absolute",
-            zIndex: "10",
-            width: "0",
-            height: "0",
-            left: x + "px",
-            top: y + "px"
-        });
-
-        const box_sel = $('<div>').css({
-            position: "absolute",
-            zIndex: "10",
-            width: "0",
-            height: "0",
-            left: event.pageX + "px",
-            top: event.pageY + "px"
-        }).addClass("drag-select");
-
-        gallleryContainer.append(true_sel).append(box_sel);
-
-        function checkSelectedUp() {
-            let i=0;
-            const { x, y, height, width } = getElementPosition(true_sel);
-            console.log(width);
-            
-            $.each(selectables, function(_, selectable) {
-                if (checkRectIntersection({ x, y, width, height }, selectable)) {
-                    console.log(i++,{ x, y, width, height }, selectable);
-                    if (!$(selectable.elem).hasClass("intersected")) {
-                        $(selectable.elem).addClass("intersected").removeClass('not-intersected');
-                    } else {
-                        if (height === 0 && width === 0) {
-                            $(selectable.elem).removeClass("intersected").addClass('not-intersected');
-                        }
-                    }
-                } else {
-                    if (!is_key_down('Control')) {
-                        $(selectable.elem).removeClass("intersected").addClass('not-intersected');
-                    }
-                }
-            });
-        }
-
-        function checkSelectedMove() {
-            const { x, y, height, width } = getElementPosition(true_sel);
-            $.each(selectables, function(_, selectable) {
-                if (checkRectIntersection({ x, y, width, height }, selectable)) {
-                    if (!$(selectable.elem).hasClass("intersected")) {
-                        $(selectable.elem).addClass("intersected").removeClass('not-intersected');
-                    }
-                } else {
-                    if (!is_key_down('Control')) {
-                        $(selectable.elem).removeClass("intersected");
-                    }
-                }
-            });
-        }
-        
-
-        function resize(event) {
-            const diffX = event.pageX + main_view.scrollLeft() - x;
-            const diffY = event.pageY + main_view.scrollTop() - y;
-
-            true_sel.css({
-                left: diffX < 0 ? x + diffX + "px" : true_sel.css('left'),
-                top: diffY < 0 ? y + diffY + "px" : true_sel.css('top'),
-                height: Math.abs(diffY) + "px",
-                width: Math.abs(diffX) + "px"
-            });
-
-            box_sel.css({
-                left: diffX < 0 ? x + diffX - main_view.scrollLeft() + "px" : box_sel.css('left'),
-                top: diffY < 0 ? y + diffY - main_view.scrollTop() + "px" : box_sel.css('top'),
-                height: Math.abs(diffY) + "px",
-                width: Math.abs(diffX) + "px"
-            });
-            //console.log($(true_sel).offset().left, $(box_sel).offset().left);
-            checkSelectedMove(); // extra line 1
-        }
-        function addEventListenerOnce(element, event, handler) {
-            // Fonction de gestionnaire d'événements qui supprime l'événement après son déclenchement
-            function onceHandler(event) {
-                handler(event);
-                $(element).off(event, onceHandler); // Supprime le gestionnaire d'événements après qu'il a été déclenché
-            }
-        
-            // Ajoute le gestionnaire d'événements
-            $(element).on(event, onceHandler);
-        }
-
-        gallleryContainer.on("pointermove", resize);
-        /*gallleryContainer.on("pointerup", function() {
-            gallleryContainer.off("pointermove", resize);
-            //console.log(true_sel);
-            checkSelectedUp();
-            true_sel.remove();
-            box_sel.remove();
-        }//, { once: true }
-    );*/
-        addEventListenerOnce(gallleryContainer, "pointerup", ()=>{
-            gallleryContainer.off("pointermove", resize);
-            //console.log(true_sel);
-            checkSelectedUp();
-            true_sel.remove();
-            box_sel.remove();})
-    }
-
-    const is_key_down = (() => {
-        const state = {};
-
-        $(window).on('keyup', (e) => state[e.key] = false);
-        $(window).on('keydown', (e) => state[e.key] = true);
-
-        return (key) => state.hasOwnProperty(key) && state[key] || false;
-    })();
-}
 
 function tabChange() {
     const tabs = $('[role="tab"]');
@@ -310,13 +198,13 @@ function tabChange() {
 }
 
 function selectCat() {
-    const categoryButtons = $('#main-view header #choose-category button.category');
-    console.log(categoryButtons);
+    const categoryButtons = $('nav header #choose-category button.category');
+    //console.log(categoryButtons);
     categoryButtons.on('click', selectThisCategory);
 
     function selectThisCategory(e) {
         const thisButton = $(e.target);
-        const actualCategoryButtons = $('#main-view header #choose-category button.category');
+        const actualCategoryButtons = $('nav header #choose-category button.category');
         actualCategoryButtons.each(function() {
             if ($(this).is(thisButton)) {
                 if (!$(this).hasClass('selected')) {
@@ -339,7 +227,7 @@ function sendCreateRequest(name, description) {
 
     $.ajax({
         type: "POST",
-        url: "./category/create-inside",
+        url: "./category/create-inside/",
         data: data,
         processData: false,
         contentType: false,
@@ -365,13 +253,16 @@ async function refreshData() {
         },
         success: function(response) {
             modelsDataToActualize = response.modelsData;
+            generateCategoryColors();
             treatCategories(modelsDataToActualize.category);
+            filterVideo();
+
         },
         error: function(xhr, status, error) {
             //console.error("Fetch error :", xhr.status);
         }
     });
-    setTimeout(selectCat, 50)
+    setTimeout(selectCat, 100)
 }
 
 function treatCategories(categories) {
@@ -388,7 +279,8 @@ function treatCategories(categories) {
         chooseCategories.append(catButton);
 
         const catLink = $('<li>').addClass('lozad');
-        const link = $('<a>').addClass('lozad').attr('href', `./category/${category.id}`).attr('target', '_blank').text(category.name);
+        console.log(categoryColors[category.name])
+        const link = $('<a>').addClass('lozad').addClass('button label').attr('href', `./category/${category.name}`).attr('target', '_blank').text(category.name).css({'background-color': categoryColors[category.name]});
         catLink.append(link);
         sidebarCategories.append(catLink);
 
@@ -433,7 +325,7 @@ function sendDeleteRequest(name) {
 
     $.ajax({
         type: "POST",
-        url: "./category/delete-inside",
+        url: "./category/delete-inside/",
         data: data,
         processData: false,
         contentType: false,
@@ -445,6 +337,30 @@ function sendDeleteRequest(name) {
         },
         error: function(xhr, status, error) {
             //console.error("Erreur lors de la création de l'instance :", xhr.status);
+        }
+    });
+}
+
+
+function sendAnnotationRequest(annotations) {
+    const data = new FormData();
+    data.append('body', JSON.stringify(annotations));
+
+    $.ajax({
+        type: "POST",
+        url: "./keyframe/update",
+        data: data,
+        processData: false,
+        contentType: false,
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+        },
+        success: function(response) {
+            console.log("Instance créée avec succès !");
+            console.log(response);
+        },
+        error: function(xhr, status, error) {
+            console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
 }
@@ -465,10 +381,13 @@ function getCookie(name) {
 }
 
 function generatefullHTML(){
+    generateCategoryColors();
     treatCategories(modelsDataToActualize.category);
     //loadImagesFromData();
     dragSelect3();
     fetchVideos();
+    selectCat();
+    
     $("[role='dialog'] #close-dialog").on('click', function() {
         $(this).closest("[role='dialog']").attr('aria-hidden', true);
     });
@@ -490,21 +409,34 @@ function generatefullHTML(){
     });
 
     $('#delete-category-button').on('click', deleteCategories);
-    $('.gallery').on('mousedown', ()=>{
-        var helper = $(".ui-selectable-helper");
-        //$(".gallery#selectable").append(helper.clone());
-        console.log(helper.css("display"), helper.css("background"));
-        var styles = helper.cssSpecific(
-            'color, backgroundColor, opacity, height, lineHeight:height');
-        console.log(styles);
-        $('.gallery').on('mousemove', ()=>{
-            console.log(helper.css("display"), helper.css("background"));
-            var styles = helper.cssSpecific(
-                'color, backgroundColor, opacity, height, lineHeight:height');
-                console.log(styles);
 
+    $("#save-annotations").on('click', function(e) {
+        const annotations = [];
+        const currentCategory = $("button.category.selected").text();
+        if (currentCategory === "") {
+            alert("Veuillez sélectionner une catégorie pour annoter les images.");
+            return;
+        }
+        else{
+            //console.log($("button.category.selected").text());
+            //console.log(modelsDataToActualize.category);
+            $("img.ui-selected").each(function() {
+                //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
+                //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
+                //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
+                const annotation = {
+                    keyframe_id: $(this).attr('src'),
+                    category: currentCategory   ,
+                };
+                //console.log(annotation);
+                annotations.push(annotation);
+            });
+            console.log(annotations);
+            sendAnnotationRequest(annotations);
+            
+        }
+        setTimeout(refreshData, 30);
     });
-});
 }
 
 (function($) {

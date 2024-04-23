@@ -4,12 +4,12 @@ from django.urls import reverse
 
 
 class Category(models.Model):
-    name = models.CharField(unique=True, max_length=100)
+    name = models.CharField(unique=True, max_length=100, primary_key=True)
     description = models.TextField()
 
     def display_keyframe(self):
         """Creates a string for the Genre. This is required to display genre in Admin."""
-        return ', '.join([keyframe.path for keyframe in self.keyframe_set.all()])
+        return ', '.join([keyframe.name for keyframe in self.keyframe_set.all()])
 
 
     def __str__(self):
