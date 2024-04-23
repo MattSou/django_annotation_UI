@@ -12,6 +12,8 @@
     {% load static %}
     <script type="text/javascript" src="{% static 'main_jquery_test.js'%}"></script> 
     {% load static %}
+    <script type="text/javascript" src="{% static 'svg-icons.js'%}"></script> 
+    {% load static %}
     <script type="text/javascript" src="{% static 'functions.js'%}"></script> 
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
@@ -55,10 +57,7 @@
         tabindex="-1">
         Images
       </button>
-    </nav>
-    <main class ="tabs">
-      <div role="tabpanel" id="main-view"  aria-labelledby="tab_main_view">
-        <header class="options">
+      <header class="options">
           <div id="choose-category">
             
 
@@ -86,18 +85,26 @@
               <li class="text">Categories:</li>
             </ul>
           </div>
-          <ul id="options-buttons">
+          <ul id="options-buttons" class="header-options">
             <!--<button id="reset-selection" class="reset">Reset selection</button>-->
             <button id="test-add-category" class="add">Add category</button>
             <button id="delete-category-button" class="delete">Delete category</button>
+            <button id="save-annotations" class="save">Save annotations</button>
+            </ul>
+          <ul id="filter-options" class="header-options">
             <button onclick="filterVideo()" id="display-filter" class="filter">filter</button> :
             nb Images <input type="number" onchange="updateNbImages()" min="1" value="80" id="number-of-images-filter"/>
             video <select onchange="filterVideo()" id="video-filter">
               <option value="">--Choose a video</option>
             </select>
+            
           </ul>
           
         </header>
+    </nav>
+    <main class ="tabs">
+      <div role="tabpanel" id="main-view"  aria-labelledby="tab_main_view">
+        
         <!--<div id="create-category"
           role="dialog"
           aria-labelledby="dialog1Title"

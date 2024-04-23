@@ -4,8 +4,8 @@ body {
   height: 100%;
   position: fixed;
   display:grid;
-  grid-template: "aside nav" 3%
-  "aside main" 97%
+  grid-template: "aside nav" 15%
+  "aside main" 85%
   / 8% 92%;
   gap:0;
 }
@@ -30,6 +30,8 @@ header.options{
   height: 80px;
   z-index: 0;
   display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
 }
 
 
@@ -73,8 +75,8 @@ button {
   display:grid;
   /*float: left;*/
   cursor: pointer;
-  grid-template : repeat(8,90px)
-  / repeat(10, 160px);
+  /*grid-template : repeat(5,220px)
+  / repeat(5, 320px);
   /*grid-auto-rows: 100px;*/
   gap: 8px 8px;
   max-width: fit-content;
@@ -91,9 +93,10 @@ button {
 }
 
 .gallery .box img {
-  object-fit: contain;
-  height: 100%;
+  /*object-fit: contain;
+  height: 75%;*/
   width: 100%;
+  object-position: top;
 }
 
 .drag-select {
@@ -142,7 +145,7 @@ button {
   margin-right: 5px;
 }
 
-main ul#categories{
+header ul#categories{
   list-style: none;
   display: flex;
 }
@@ -159,16 +162,17 @@ main ul#categories{
   height: 20px;
 }
 
-button.reset{
-  background-color: rgb(37, 185, 185);
+button.save{
+  background-color: rgb(0, 0, 0);
   border: none;
   box-shadow: inset;
   height: 20px;
   text-align: center;
   width: 130px;
+  color: white;
 }
 
-button.reset:hover{
+button.save:hover{
   border: 1px solid gray;
   font-weight: bold;
 }
@@ -200,6 +204,7 @@ button.delete:hover{
   border: 1px solid gray;
   font-weight: bold;
 }
+
 
 
 .sidebar h1{
@@ -304,6 +309,51 @@ aside div{
   object-fit: contain;
 }
 
-#data-models{
+#models-data{
   display:none;
+}
+
+.svg-icon {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+  object-position: bottom;
+  /*position: fixed;*/
+
+}
+
+.svg-icon path,
+.svg-icon polygon,
+.svg-icon rect {
+  fill: #4691f6;
+}
+
+.svg-icon circle {
+  stroke: #4691f6;
+  stroke-width: 1;
+}
+ul.img-label{
+  display: flex;
+  list-style: none;
+  padding-left: 0;
+  margin: 2px 2px 0 0;
+  /*padding-bottom: 10px;*/
+}
+
+button.label {
+  color: white;
+  border-style: none;
+  border-radius: 2px;
+}
+.button.label {
+  text-decoration: none;
+  background: local;
+  color: white;
+  border-style: none;
+  border-radius: 2px;
+  padding: 0.1rem;
+}
+
+header #filter-options{
+  position: sticky;
 }

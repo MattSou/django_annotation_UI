@@ -13,9 +13,11 @@ from django.core.serializers import serialize
 
 def index(request):
     context = {
+        'annotations': list(Keyframe.category.through.objects.values()),
         'category': list(Category.objects.values()),
         'keyFrame': list(Keyframe.objects.values()),
-        'video' : list(Video.objects.values())
+        'video' : list(Video.objects.values()),
+        
     }
     context = json.dumps(context)
     context = {'modelsData': context}
@@ -44,15 +46,17 @@ def create_category(request):
         new_cat = Category(name=name, description=description)
         new_cat.save()
         return JsonResponse({'message': 'Instance créée avec succès !'})
-    else:
-        return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
+    #else:
+        #return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
 
 
 def fetch_models_data(request):
     context = {
+        'annotations': list(Keyframe.category.through.objects.values()),
         'category': list(Category.objects.values()),
-        'keyFrame': list(Keyframe.objects.values()), 
-        'video' : list(Video.objects.values())
+        'keyFrame': list(Keyframe.objects.values()),
+        'video' : list(Video.objects.values()),
+        
     }
     return JsonResponse({'modelsData': context})
 
@@ -68,6 +72,31 @@ def delete_category(request):
         return JsonResponse({'message': 'Instance créée avec succès !'})
     else:
         return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
+    
+@csrf_exempt
+def update_keyframe(request):
+    if request.method == 'POST':
+        data = request.POST.get('body')
+        data = json.loads(data)
+        for item in data:
+            model = Keyframe.objects.get(pk=item['keyframe_id'])
+            model.category.add(item['category'])
+            model.save()
+        return JsonResponse({'message': 'Instance mise à jour avec succès !', 'data': data})
+    else:
+        return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
+
+def update_model(model, save_update=True, **kwargs):
+    """Updates the specified model instance using the keyword arguments as the model
+    property attributes and values.
+    Example usage:
+        update_model(mymodel, save_update=True, **some_dictionary)
+    """
+    for attr, val in kwargs.items():
+        setattr(model, attr, val)
+    if save_update:
+        model.save()
+    pass
 
 class CategoryDetailView(generic.DetailView):
     """Generic class-based detail view for a book."""
