@@ -20,7 +20,8 @@ class Category(models.Model):
         """Returns the URL to access a detail record for this book."""
         return reverse('category-detail', args=[str(self.id)])
 
-
+def default_annotated():
+    return {cat : False for cat in list(Category.objects.values_list('name', flat=True))}
 
 class Keyframe(models.Model):
 
@@ -34,12 +35,21 @@ class Keyframe(models.Model):
 
     timecode = models.CharField(max_length=200, help_text='hh:mm:ss.f format', null=True)
 
+    annotated = models.JSONField(default=default_annotated, null=True)
+
     def display_category(self):
         """Creates a string for the Genre. This is required to display genre in Admin."""
         return ', '.join([category.name for category in self.category.all()])
     
 
     display_category.short_description = 'Category'
+
+    def display_annotated(self):
+        """Creates a string for the Genre. This is required to display genre in Admin."""
+        return ', '.join([category +f' : {self.annotated[category]}' for category in self.annotated.keys()])
+    
+
+    display_annotated.short_description = 'Annotation status'
 
     def __str__(self):
         """String for representing the Model object."""

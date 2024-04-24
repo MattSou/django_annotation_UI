@@ -35,3 +35,7 @@ urlpatterns += [
 urlpatterns +=[
     path('keyframe/update', views.update_keyframe, name='update-keyframe'),
 ]
+
+urlpatterns +=[
+    path('annotations-reset', views.reset_annotations, name='reset-annotations'),
+]

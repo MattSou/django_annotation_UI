@@ -1,110 +1,108 @@
 <!DOCTYPE html>
 <html lang="en-us">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 
-    <title>Image gallery</title>
-    {% load static %}
-    <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js'%}"></script>
-    {% load static %}
-    <script type="text/javascript" src="{% static 'lozad.min.js'%}"></script>
-    {% load static %}
-    <script type="text/javascript" src="{% static 'main_jquery_test.js'%}"></script> 
-    {% load static %}
-    <script type="text/javascript" src="{% static 'svg-icons.js'%}"></script> 
-    {% load static %}
-    <script type="text/javascript" src="{% static 'functions.js'%}"></script> 
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+
+  <title>Image gallery</title>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'jquery-3.7.1.min.js'%}"></script>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'lozad.min.js'%}"></script>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'main_jquery_test.js'%}"></script>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'svg-icons.js'%}"></script>
+  {% load static %}
+  <script type="text/javascript" src="{% static 'functions.js'%}"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
 
 
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
-    
-  </head>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'style.css' %}" />
 
-  <body>
-      <aside class = "sidebar">
-      <div class="folders">
-        <h1 class ="sidebar">
-          Folders
-        </h1>
+</head>
 
-      </div>
-      <div class="categories">
-        <h1 class ="sidebar">
-          Categories
-        </h1>
-        <ul id="categories"></ul>
+<body>
+  <aside class="sidebar">
+    <div class="folders">
+      <h1 class="sidebar">
+        Folders
+      </h1>
 
-      </div>
-    </aside>
+    </div>
+    <div class="categories">
+      <h1 class="sidebar">
+        Categories
+      </h1>
+      <ul id="categories"></ul>
+      <ul id="categories-buttons">
+        <button id="add-category-button" class="add">Add category</button>
+        <button id="delete-category-button" class="delete">Delete category</button>
+
+    </div>
+  </aside>
+  <div id="true_body">
     <nav role="tablist">
-      <button 
-        id = "tab_main_view" 
-        role="tab" 
-        aria-controls="main-view"
-        aria-selected="true"
-        tabindex="0">
-        Main view
+      <button id="tab_annotation_view" role="tab" aria-controls="annotation-view" aria-selected="true" tabindex="0">
+        Annotation view
       </button>
-      <button 
-        id = "tab_images" 
-        role="tab" 
-        aria-controls="images"
-        aria-selected="false"
-        tabindex="-1">
-        Images
+      <button id="tab_explore" role="tab" aria-controls="explore" aria-selected="false" tabindex="-1">
+        Explore
       </button>
-      <header class="options">
-          <div id="choose-category">
-            
+      <header id="annotation-options" role="tabpanel" aria-labelledby="tab_annotation_view" aria-hidden="false"
+        class="options">
 
-            <!--{% if category_list %}
-              <ul id="categories">
-                <li class="text"> Categories:</li>
-              {% for category in category_list %}
-                <li>
-                  <a href="{{ category.get_absolute_url }}">
-                  {{ category }}
-                  </a>
-                </li>
-              {% endfor %}
+        <ul id="choose-category">
+          <li class="text">Categories:</li>
+        </ul>
 
-            </ul>
-            {% else %}
-              <p>There are no categorys available.</p>
-            {% endif %}-->
-            <!--<ul id="categories">
-              <li class="text"> Categories:</li>
-            </ul>
-            <button id = "add-category">+</button>
-            <button id = "add-category">+</button>-->
-            <ul id="categories">
-              <li class="text">Categories:</li>
-            </ul>
-          </div>
-          <ul id="options-buttons" class="header-options">
-            <!--<button id="reset-selection" class="reset">Reset selection</button>-->
-            <button id="test-add-category" class="add">Add category</button>
-            <button id="delete-category-button" class="delete">Delete category</button>
-            <button id="save-annotations" class="save">Save annotations</button>
-            </ul>
-          <ul id="filter-options" class="header-options">
-            <button onclick="filterVideo()" id="display-filter" class="filter">filter</button> :
-            nb Images <input type="number" onchange="updateNbImages()" min="1" value="80" id="number-of-images-filter"/>
-            video <select onchange="filterVideo()" id="video-filter">
-              <option value="">--Choose a video</option>
-            </select>
-            
-          </ul>
-          
-        </header>
+        <ul id="mode-options" class="header-options">
+          <input class="mode" type="checkbox" id="fast-annotation" value="fast-annotation">
+          <label class="mode" for="fast-annotation">enable fast annotation</label>
+        </ul>
+
+        <ul id="options-buttons" class="header-options">
+          <button id="save-annotations" class="save">Save annotations</button>
+          <button id="reset-annotations" class="reset">Reset annotations</button>
+        </ul>
+
+        <ul id="filter-options" class="header-options">
+          <button onclick="displayGallery()" id="display-filter" class="filter">filter</button> :
+          nb Images <input type="number" onchange="updateNbImages()" min="1" value="15" id="number-of-images-filter" />
+          video <select onchange="displayGallery()" id="video-filter">
+            <option value="">--Choose a video</option>
+          </select>
+          not annotated for :
+        </ul>
+
+        <ul id="metadata-info" class="header-info">
+          <li id="images-counter"></li>
+        </ul>
+
+      </header>
+      <header id="explore-options" role="tabpanel" aria-labelledby="tab_explore" aria-hidden="true" class="options">
+
+        <ul id="filter-options" class="header-options">
+          <button onclick="displayGallery()" id="display-filter" class="filter">filter</button> :
+          nb Images <input type="number" onchange="updateNbImages()" min="1" value="15" id="number-of-images-filter" />
+          video <select onchange="displayGallery()" id="video-filter">
+            <option value="">--Choose a video</option>
+          </select>
+          categories :
+        </ul>
+
+        <ul id="metadata-info" class="header-info">
+          <li id="images-counter"></li>
+        </ul>
+
+      </header>
     </nav>
-    <main class ="tabs">
-      <div role="tabpanel" id="main-view"  aria-labelledby="tab_main_view">
-        
+    <main class="tabs">
+      <div role="tabpanel" id="annotation-view" aria-labelledby="tab_annotation_view" aria-hidden="false">
+
         <!--<div id="create-category"
           role="dialog"
           aria-labelledby="dialog1Title"
@@ -113,43 +111,40 @@
           <iframe src="category/create" seamless></iframe>
           <button id = "close-dialog"><img src = "{% static '28029-3-red-cross-file.png'%}"></button>
         </div>-->
-        <div id="create-category"
-          role="dialog"
-          aria-labelledby="dialog1Title"
-          aria-describedby="dialog1Desc"
+        <div id="create-category" role="dialog" aria-labelledby="dialog1Title" aria-describedby="dialog1Desc"
           aria-hidden="true">
           <form method="" class="create-category">
             <table>
-              <tbody><tr>
-              <th><label for="id_name">Name:</label></th>
-              <td>
-                
-                <input type="text" name="name" placeholder="Blur" maxlength="100" required="" id="id_name">
-                
-                
-              </td>
-            </tr>
-          
-            <tr>
-              <th><label for="id_description">Description:</label></th>
-              <td>
-                
-                <textarea name="description" placeholder="A certain type of blur ..." cols="40" rows="10" required="" id="id_description"></textarea>
-                
-                
-                  
-                
-              </td>
-            </tr>
-            </tbody></table>
+              <tbody>
+                <tr>
+                  <th><label for="id_name">Name:</label></th>
+                  <td>
+
+                    <input type="text" name="name" placeholder="Blur" maxlength="100" required="" id="id_name">
+
+
+                  </td>
+                </tr>
+
+                <tr>
+                  <th><label for="id_description">Description:</label></th>
+                  <td>
+
+                    <textarea name="description" placeholder="A certain type of blur ..." cols="40" rows="10"
+                      required="" id="id_description"></textarea>
+
+
+
+
+                  </td>
+                </tr>
+              </tbody>
+            </table>
             <input type="submit" value="Save">
           </form>
-            <button id = "close-dialog"><img src = "{% static '28029-3-red-cross-file.png'%}"></button>
-          </div>
-          <div id="delete-category"
-          role="dialog"
-          aria-labelledby="dialog1Title"
-          aria-describedby="dialog1Desc"
+          <button id="close-dialog"><img src="{% static '28029-3-red-cross-file.png'%}"></button>
+        </div>
+        <div id="delete-category" role="dialog" aria-labelledby="dialog1Title" aria-describedby="dialog1Desc"
           aria-hidden="true">
           <h2>Choose the categories to delete:</h2>
           <div class="delete-category">
@@ -158,26 +153,28 @@
             </ul>
             <button id="delete">Delete</button>
           </div>
-            <button id = "close-dialog"><img src = "{% static '28029-3-red-cross-file.png'%}"></button>
-          </div>
-        <div class="gallery-container">
-        <div class="gallery" id="selectable">
-  
+          <button id="close-dialog"><img src="{% static '28029-3-red-cross-file.png'%}"></button>
         </div>
+        <div class="gallery-container">
+          <div class="gallery" id="selectable">
+
+          </div>
         </div>
 
-        </div>
-      <div role="tabpanel" id="images"  aria-labelledby="tab_images" hidden="true">
+      </div>
+      <div role="tabpanel" id="explore" aria-labelledby="tab_explore" aria-hidden="true">
         <header class="options">
-          
+
         </header>
         <div class="gallery">
-  
+
         </div>
-  
+
       </div>
     </main>
-    <div id="models-data">{{modelsData}}</div>
-    
-  </body>
+  </div>
+  <div id="models-data">{{modelsData}}</div>
+
+</body>
+
 </html>
