@@ -56,7 +56,7 @@ $(document).ready(function (){
 
 
 function loadImages() {
-    const gallery = $('#main-view .gallery');
+    const gallery = $('#annotation-view .gallery');
     const gallery2 = $('#images .gallery');
 
     appendImages(range(0, 79).map(toJPGPath).map(addImgDir), gallery);
@@ -79,52 +79,131 @@ function fetchVideos(){
     
 }
 
-function filterVideo(){
+
+
+function displayGallery(){
+    let listKf = modelsDataToActualize.keyFrame 
+    
+    $('#annotation-view .gallery').empty();
+    const notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
     //console.log($("select#video-filter").prop('selectedIndex'));
-    if (!($("select#video-filter").val()==="")){
-        currentVideo = $("select#video-filter").val();
+    listKf.sort(function(a, b) {
+        return (a.video_id.localeCompare(b.video_id) === 0) ? a.timecode.localeCompare(b.timecode) : a.video_id.localeCompare(b.video_id);
+    })
+    if (!($("#annotation-options select#video-filter").val()==="")){
+        currentVideo = $("#annotation-options select#video-filter").val();
+        //console.log(notAnnotatedCats);
         //console.log(currentVideo);
-        $('#main-view .gallery').empty();
-        let c =0;
-        let listKf = modelsDataToActualize.keyFrame.filter(function (kf) {
+        listKf = listKf.filter(function (kf) {
             return kf.video_id === currentVideo;
         });
-        listKf.sort(function(a, b) {
-            return a.timecode.localeCompare(b.timecode);
-        })
-        listKf = listKf.slice(0, nbImages);
-        
-        //console.log(listKf);
-        const existingAnnotations = modelsDataToActualize.annotations;
-        //console.log(existingAnnotations);
-        listKf = listKf.map(function (kf) {
-            let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
-            //console.log(kf, annot);
-            //kf.category = annot.map(function(annot){return annot.category});
-            return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
-            });
-        //console.log(listKf);
-        const othernbImages = nbImages-1;
-        $('#main-view .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
-        console.log($('#main-view .gallery').css('grid-template'));
-        $.each((listKf), function (_, kf) { 
-            //console.log(kf.category.map(function(cat){return 'youpi'}));
-            $('#main-view .gallery').append($('<div>').addClass('box selectable').append(
-                $('<img>').attr('src', kf.path)).append(
-                    $('<ul>').addClass('img-label').append(
-                        kf.category.map(createLabelList)
-                        )
+    }
+    const N = listKf.length;
+    const entireKf = listKf;
+
+    listKf = listKf.filter(function (kf) {
+        return notAnnotatedCats.every(function(cat){return kf.annotated[cat] === false});
+    });
+    
+    listKf = listKf.slice(0, nbImages);
+    
+    //console.log(listKf);
+    const existingAnnotations = modelsDataToActualize.annotations;
+    //console.log(existingAnnotations);
+    listKf = listKf.map(function (kf) {
+        let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
+        //console.log(kf, annot);
+        //kf.category = annot.map(function(annot){return annot.category});
+        return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
+        });
+    //console.log(listKf);
+    const index = entireKf.findIndex(function(kf){return kf.path == listKf[0].path});
+    const othernbImages = nbImages-1;
+    $('#images-counter').text(`Key frames ${index+1} - ${index+othernbImages+1} / ${N}`)
+    $('#annotation-view .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
+    console.log($('#annotation-view .gallery').css('grid-template'));
+    $.each((listKf), function (_, kf) { 
+        //console.log(kf.category.map(function(cat){return 'youpi'}));
+        $('#annotation-view .gallery').append($('<div>').addClass('box selectable').append(
+            $('<img>').attr('src', kf.path)).append(
+                $('<ul>').addClass('img-label').append(
+                    kf.category.map(createLabelList)
                     )
                 )
-            }
-        );
+            )
+        }
+    );
         
         
-    };
         dragSelect3();
         createSvgLabel();
-        //appendImages(list_images, $('#main-view .gallery'));
+        //appendImages(list_images, $('#annotation-view .gallery'));
         observer.observe();
+}
+
+function displayExploreGallery(){
+    let listKf = modelsDataToActualize.keyFrame 
+    const categoriesToDisplay = $('#explore-options input.category-filter:checked').map(function(){return $(this).attr('id')}).get();
+    
+    $('#explore .gallery').empty();
+    //console.log($("select#video-filter").prop('selectedIndex'));
+    listKf.sort(function(a, b) {
+        return (a.video_id.localeCompare(b.video_id) === 0) ? a.timecode.localeCompare(b.timecode) : a.video_id.localeCompare(b.video_id);
+    })
+    if (!($("#explore-options select#video-filter").val()==="")){
+        currentVideo = $("#explore-options select#video-filter").val();
+        //console.log(notAnnotatedCats);
+        //console.log(currentVideo);
+        listKf = listKf.filter(function (kf) {
+            return kf.video_id === currentVideo;
+        });
+    }
+    const N = listKf.length;
+    const entireKf = listKf;
+
+    if (categoriesToDisplay.length > 0) {
+        listKf = listKf.filter(function (kf) {
+            return categoriesToDisplay.some(function(cat){return kf.category.includes(cat)});
+        });
+    }
+
+
+
+    listKf = listKf.slice(0, nbImages);
+    
+    //console.log(listKf);
+    const existingAnnotations = modelsDataToActualize.annotations;
+    //console.log(existingAnnotations);
+    listKf = listKf.map(function (kf) {
+        let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
+        //console.log(kf, annot);
+        //kf.category = annot.map(function(annot){return annot.category});
+        return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
+        });
+    //console.log(listKf);
+    const index = entireKf.findIndex(function(kf){return kf.path == listKf[0].path});
+    const othernbImages = nbImages-1;
+    $('#images-counter').text(`Key frames ${index+1} - ${index+othernbImages+1} / ${N}`)
+    $('#explore .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
+    console.log($('#explore .gallery').css('grid-template'));
+    $.each((listKf), function (_, kf) { 
+        //console.log(kf.category.map(function(cat){return 'youpi'}));
+        $('#explore .gallery').append($('<div>').addClass('box selectable').append(
+            $('<img>').attr('src', kf.path)).append(
+                $('<ul>').addClass('img-label').append(
+                    kf.category.map(createLabelList)
+                    )
+                )
+            )
+        }
+    );
+        
+        
+        dragSelect3();
+        createSvgLabel();
+        //appendImages(list_images, $('#annotation-view .gallery'));
+        observer.observe();
+
 }
 
 function createLabelList(cat){
@@ -145,55 +224,29 @@ function loadImagesFromData() {
     let images = modelsDataToActualize.keyFrame
 
     $.each(images, function (_, image) { 
-        $('#main-view .gallery').append($('<div>').addClass('box selectable').append($('<img>').attr('src', image.path)));
+        $('#annotation-view .gallery').append($('<div>').addClass('box selectable').append($('<img>').attr('src', image.path)));
     });
 
     
 }
 
 function dragSelect3() {
-    $( "#selectable" ).selectable({appendTo: $("#main-view .gallery")});
+    $( "#selectable" ).selectable({appendTo: $("#annotation-view .gallery")});
   }
 
 
 function tabChange() {
-    const tabs = $('[role="tab"]');
+    const tabs = $('.tabs');
     const tabList = $('[role="tablist"]');
 
-    tabs.on("click", changeTabs);
-
-    let tabFocus = 0;
-
-    tabList.on("keydown", function(e) {
-        if (e.key === "ArrowRight" || e.key === "ArrowLeft") {
-            tabs.eq(tabFocus).attr("tabindex", -1);
-            if (e.key === "ArrowRight") {
-                tabFocus++;
-                if (tabFocus >= tabs.length) {
-                    tabFocus = 0;
-                }
-            } else if (e.key === "ArrowLeft") {
-                tabFocus--;
-                if (tabFocus < 0) {
-                    tabFocus = tabs.length - 1;
-                }
-            }
-
-            tabs.eq(tabFocus).attr("tabindex", 0).focus();
-        }
-    });
+    tabList.on("click", changeTabs);
 
     function changeTabs(e) {
-        const target = $(e.target);
-        const parent = target.parent();
-        const grandparent = parent.parent();
-
-        parent.find('[aria-selected="true"]').attr("aria-selected", false).attr("tabindex", -1);
-        parent.find('[tabindex="0"]').attr("tabindex", -1);
-
-        target.attr("aria-selected", true).attr("tabindex", 0);
-
-        grandparent.parent().find(`#${target.attr("aria-controls")}`).removeAttr("hidden");
+        const label = $(e.target).attr('id');
+        const selectedTabpanels = $(`[role="tabpanel"][aria-labelledby="${label}"]`).get();
+        console.log(selectedTabpanels);
+        $.each(selectedTabpanels, function (_, tabpanel){$(tabpanel).attr('aria-hidden', false).siblings('[role="tabpanel"]').attr('aria-hidden', true)});
+        $(e.target).attr('aria-selected', true).attr('tabindex', 0).siblings().attr('aria-selected', false).attr('tabindex', -1);
     }
 }
 
@@ -201,22 +254,22 @@ function selectCat() {
     const categoryButtons = $('nav header #choose-category button.category');
     //console.log(categoryButtons);
     categoryButtons.on('click', selectThisCategory);
+}
 
-    function selectThisCategory(e) {
-        const thisButton = $(e.target);
-        const actualCategoryButtons = $('nav header #choose-category button.category');
-        actualCategoryButtons.each(function() {
-            if ($(this).is(thisButton)) {
-                if (!$(this).hasClass('selected')) {
-                    $(this).addClass('selected');
-                } else {
-                    $(this).removeClass('selected');
-                }
+function selectThisCategory(e) {
+    const thisButton = $(e.target);
+    const actualCategoryButtons = $('nav header #choose-category button.category');
+    actualCategoryButtons.each(function() {
+        if ($(this).is(thisButton)) {
+            if (!$(this).hasClass('selected')) {
+                $(this).addClass('selected');
             } else {
                 $(this).removeClass('selected');
             }
-        });
-    }
+        } else {
+            $(this).removeClass('selected');
+        }
+    });
 }
 
 
@@ -236,15 +289,17 @@ function sendCreateRequest(name, description) {
         },
         success: function(response) {
             //console.log("Instance créée avec succès !");
+            
         },
         error: function(xhr, status, error) {
             //console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
+    setTimeout(refreshData, 100);
 }
 
 
-async function refreshData() {
+function refreshData() {
     $.ajax({
         type: "GET",
         url: "./fetch-models-data",
@@ -253,29 +308,61 @@ async function refreshData() {
         },
         success: function(response) {
             modelsDataToActualize = response.modelsData;
-            generateCategoryColors();
-            treatCategories(modelsDataToActualize.category);
-            filterVideo();
+            setTimeout(function (){
+                generateCategoryColors();
+                treatCategories(modelsDataToActualize.category);
+                displayGallery();
+        },
+        100)
+            
 
         },
         error: function(xhr, status, error) {
             //console.error("Fetch error :", xhr.status);
         }
     });
-    setTimeout(selectCat, 100)
+    //setTimeout(selectCat, 100)
+}
+
+function refreshDisplay() {
+    $.ajax({
+        type: "GET",
+        url: "./fetch-models-data",
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+        },
+        success: function(response) {
+            modelsDataToActualize = response.modelsData;
+            setTimeout(function (){
+                displayGallery();
+        },
+        100)
+            
+
+        },
+        error: function(xhr, status, error) {
+            //console.error("Fetch error :", xhr.status);
+        }
+    });
+    //setTimeout(selectCat, 100)
 }
 
 function treatCategories(categories) {
-    const chooseCategories = $("#choose-category ul#categories");
+    const chooseCategories = $("#annotation-options ul#choose-category");
     const deleteCategories = $("#delete-category ul#categories-to-delete");
     const sidebarCategories = $("aside ul#categories");
+    const annotationFilterOptions = $("#annotation-options #filter-options");
+    const exploreFilterOptions = $("#explore-options #filter-options");
 
     chooseCategories.find("*").not("li").remove();
     sidebarCategories.empty();
     deleteCategories.empty();
+    annotationFilterOptions.find(".not-annotated-filter").remove();
+    exploreFilterOptions.find(".not-annotated-filter").remove();
 
     $.each(categories, function(_, category) {
-        const catButton = $('<button>').addClass('category').addClass('lozad').text(category.name);
+        const catButton = $('<button>').addClass('category').addClass('lozad').text(category.name)
+        catButton.on('click', selectThisCategory);
         chooseCategories.append(catButton);
 
         const catLink = $('<li>').addClass('lozad');
@@ -286,6 +373,13 @@ function treatCategories(categories) {
 
         const cattButtonDelete = catButton.clone().attr('type', 'button');
         deleteCategories.append(cattButtonDelete);
+
+
+        annotationFilterOptions.append($('<input>').addClass('not-annotated-filter').attr('type', "checkbox").attr('id', category.name).attr('value', category.name))
+        .append($('<label>').addClass('not-annotated-filter').attr('for', category.name).text(category.name));
+
+        exploreFilterOptions.append($('<input>').addClass('category-filter').attr('type', "checkbox").attr('id', category.name).attr('value', category.name))
+        .append($('<label>').addClass('category-filter').attr('for', category.name).text(category.name));
     });
 }
 
@@ -315,7 +409,7 @@ function deleteCategories() {
             sendDeleteRequest(name);
             deleteCategoryDialog.attr('aria-hidden', 'true');
         });
-        setTimeout(refreshData, 10);
+        //setTimeout(refreshData, 100);
     });
 }
 
@@ -333,12 +427,14 @@ function sendDeleteRequest(name) {
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
+            
             //console.log("Instance créée avec succès !");
         },
         error: function(xhr, status, error) {
             //console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
+    setTimeout(refreshData, 100);
 }
 
 
@@ -358,11 +454,14 @@ function sendAnnotationRequest(annotations) {
         success: function(response) {
             console.log("Instance créée avec succès !");
             console.log(response);
+            setTimeout(refreshDisplay, 50);
+            
         },
         error: function(xhr, status, error) {
             console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
+    ;
 }
 
 function getCookie(name) {
@@ -386,7 +485,9 @@ function generatefullHTML(){
     //loadImagesFromData();
     dragSelect3();
     fetchVideos();
-    selectCat();
+    //selectCat();
+    displayGallery();
+    tabChange();
     
     $("[role='dialog'] #close-dialog").on('click', function() {
         $(this).closest("[role='dialog']").attr('aria-hidden', true);
@@ -396,7 +497,7 @@ function generatefullHTML(){
         $(".selectable").removeClass('intersected not-intersected');
     });*/
 
-    $("#test-add-category").on('click', function() {
+    $("#add-category-button").on('click', function() {
         const createCategoryDialog = $("[role='dialog']#create-category");
         createCategoryDialog.attr('aria-hidden', 'false');
         createCategoryDialog.find("form.create-category").on('submit', function(e) {
@@ -404,7 +505,7 @@ function generatefullHTML(){
             const data = $(this).serializeArray();
             sendCreateRequest(data[0].value, data[1].value);
             createCategoryDialog.attr('aria-hidden', 'true');
-            setTimeout(refreshData, 10);
+            //setTimeout(refreshData, 100);
         });
     });
 
@@ -420,23 +521,61 @@ function generatefullHTML(){
         else{
             //console.log($("button.category.selected").text());
             //console.log(modelsDataToActualize.category);
-            $("img.ui-selected").each(function() {
+            $(".box.ui-selected").each(function() {
                 //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
                 //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
                 //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
                 const annotation = {
-                    keyframe_id: $(this).attr('src'),
-                    category: currentCategory   ,
+                    keyframe_id: $(this).find('img').attr('src'),
+                    category: currentCategory,
                 };
-                //console.log(annotation);
+                console.log(annotation);
                 annotations.push(annotation);
             });
+            if ($("#fast-annotation").is(':checked')){
+                $('.box.selectable img').each(function() {
+                    //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
+                    //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
+                    //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
+                    const annotation = {
+                        keyframe_id: $(this).attr('src'),
+                        annotated: {[currentCategory]: true},
+                    };
+                    //console.log(annotation);
+                    annotations.push(annotation);
+                });
+        }
             console.log(annotations);
+            console.log(currentCategory);
             sendAnnotationRequest(annotations);
             
         }
-        setTimeout(refreshData, 30);
     });
+
+    $('#reset-annotations').on('click', sendResetAnnotationsRequest);
+}
+
+function sendResetAnnotationsRequest() {
+    $.ajax({
+        type: "POST",
+        url: "./annotations-reset",
+        data: {},
+        processData: false,
+        contentType: false,
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+        },
+        success: function(response) {
+            console.log("Annotations réinitialisées");
+            console.log(response);
+            
+        },
+        error: function(xhr, status, error) {
+            console.error("Erreur lors de la création de l'instance :", xhr.status);
+        }
+    });
+    setTimeout(refreshData, 50);
+    
 }
 
 (function($) {

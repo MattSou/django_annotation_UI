@@ -4,10 +4,16 @@ body {
   height: 100%;
   position: fixed;
   display:grid;
-  grid-template: "aside nav" 15%
+  grid-template: "aside true_body"/ 10% 90%;
+  /*grid-template: "aside nav" 15%
   "aside main" 85%
-  / 8% 92%;
+  / 10% 90%;*/
   gap:0;
+  font-family: 'Roboto';
+}
+
+#true_body{
+  grid-area: true_body;
 }
 
 aside{
@@ -17,23 +23,56 @@ aside{
   grid-area: aside;
 }
 nav{
-  margin-bottom: -10px;
-  grid-area: nav;
+  /*grid-area: nav;*/
+  display: inline-block;
+  height: min-content;
+  width :100%;
 }
 
 main{
-  grid-area: main;
+  /*grid-area: main;*/
+  display: inline-block;
+  height: 800px;
 }
 
 header.options{
   padding: 0.2em;
   height: 80px;
   z-index: 0;
+  display: grid;
+  grid-template-areas: "a b c" "d d c";
+  grid-auto-flow: row;
+  flex-wrap: wrap;
+  flex-direction: row;
+  height: fit-content;
+}
+
+header.options ul{
   display: flex;
   flex-wrap: wrap;
   flex-direction: row;
+  width: fit-content;
+  height: fit-content;
 }
 
+header.options ul > * {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+header.options ul#options-buttons{
+  display: block;
+  list-style-position: inside;
+  grid-area: c;
+}
+
+header.options ul#options-buttons > *{
+  display: block;
+  list-style-position: inside;
+  grid-area: c;
+  align-self: center;
+  margin-bottom: 5px;
+}
 
 button {
   cursor: pointer;
@@ -52,22 +91,22 @@ button {
 
 
 [role="tabpanel"] {
-  padding: 0 0.5em 0.5em 0.7em;
+  padding: 0.5em 0.5em 0.5em 0.7em;
   border: 1px solid grey;
   border-radius: 0 0 5px 5px;
   background: white;
-  max-height: 100%;
+  max-height: 95%;
   overflow: auto;
   z-index:0;
 }
 
-[role="tabpanel"]:focus {
-  border-color: orange;
-  outline: 1px solid orange;
+[role="tabpanel"][aria-hidden="true"]{
+  display: none;
 }
 
-[role="tabpanel"][tabindex="-1"]{
-  display: none;
+[role="tab"][aria-selected="true"]{
+  background: rgb(37, 41, 37);
+  color: white;
 }
 
 
@@ -163,16 +202,35 @@ header ul#categories{
 }
 
 button.save{
-  background-color: rgb(0, 0, 0);
+  background-color: rgb(24, 124, 206);
   border: none;
   box-shadow: inset;
-  height: 20px;
+  height: 40px;
   text-align: center;
-  width: 130px;
+  width: 260px;
   color: white;
+  position: relative;
+  border-radius: 10px;
 }
 
 button.save:hover{
+  border: 1px solid gray;
+  font-weight: bold;
+}
+
+button.reset{
+  background-color: rgb(0, 0, 0);
+  border: none;
+  box-shadow: inset;
+  height: 40px;
+  text-align: center;
+  width: 260px;
+  color: white;
+  position: relative;
+  border-radius: 10px;
+}
+
+button.reset:hover{
   border: 1px solid gray;
   font-weight: bold;
 }
@@ -213,16 +271,32 @@ button.delete:hover{
   margin: 20px 10px; 
 }
 .sidebar ul#categories a{
-  font-size: 10pt;
+  font-size: 12pt;
   text-align: left;
-  /*margin: 20px;*/ 
 }
+
+.sidebar ul#categories li{
+  margin-top: 5px;
+}
+
+
 
 .sidebar ul#categories{
   padding-left:10px;
   list-style-type: none;
   list-style-position: inside;
   font-size: auto;
+}
+
+.sidebar ul#categories-buttons{
+  margin-top: 10px;
+  padding-left:10px;
+  list-style-type: none;
+  list-style-position: inside;
+}
+
+.sidebar ul#categories-buttons button{
+  margin-top: 5px;
 }
 
 aside div{
@@ -356,4 +430,12 @@ button.label {
 
 header #filter-options{
   position: sticky;
+}
+
+input[type="number"]{
+  width : 80px;
+}
+
+nav header ul{
+  list-style-type: none;
 }

@@ -15,7 +15,7 @@ class CategoryAdmin(admin.ModelAdmin):
 class KeyframeAdmin(admin.ModelAdmin):
     """Administration object for KeyFrame models.
     """
-    list_display = ('path', 'display_category')
+    list_display = ('path', 'display_category', 'display_annotated')
     #fields = ['path']
 
 @admin.register(Video)

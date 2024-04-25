@@ -45,9 +45,14 @@ def create_category(request):
         description = data.get('description')
         new_cat = Category(name=name, description=description)
         new_cat.save()
+        for keyframe in Keyframe.objects.all():
+            ann_dic = keyframe.annotated
+            ann_dic[name] = False
+            keyframe.annotated = ann_dic
+            keyframe.save()
         return JsonResponse({'message': 'Instance créée avec succès !'})
-    #else:
-        #return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
+    else:
+        return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
 
 
 def fetch_models_data(request):
@@ -69,6 +74,11 @@ def delete_category(request):
         data = request.POST
         name = data.get('name')
         Category.objects.filter(name=name).delete()
+        for keyframe in Keyframe.objects.all():
+            ann_dic = keyframe.annotated
+            ann_dic.pop(name, None)
+            keyframe.annotated = ann_dic
+            keyframe.save()
         return JsonResponse({'message': 'Instance créée avec succès !'})
     else:
         return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
@@ -79,24 +89,25 @@ def update_keyframe(request):
         data = request.POST.get('body')
         data = json.loads(data)
         for item in data:
-            model = Keyframe.objects.get(pk=item['keyframe_id'])
-            model.category.add(item['category'])
+            if 'category' in item:
+                model = Keyframe.objects.get(pk=item['keyframe_id'])
+                model.category.add(item['category'])
+            if 'annotated' in item:
+                model = Keyframe.objects.get(pk=item['keyframe_id'])
+                model.annotated.update(item['annotated'])
             model.save()
         return JsonResponse({'message': 'Instance mise à jour avec succès !', 'data': data})
     else:
         return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
 
-def update_model(model, save_update=True, **kwargs):
-    """Updates the specified model instance using the keyword arguments as the model
-    property attributes and values.
-    Example usage:
-        update_model(mymodel, save_update=True, **some_dictionary)
-    """
-    for attr, val in kwargs.items():
-        setattr(model, attr, val)
-    if save_update:
-        model.save()
-    pass
+@csrf_exempt
+def reset_annotations(request):
+    ann_dic = Keyframe().annotated
+    annotations = Keyframe.category.through.objects.all()
+    for annotation in annotations:
+        annotation.delete()
+    Keyframe.objects.all().update(annotated=ann_dic)
+    return JsonResponse({'message': 'Annotations réinitialisées avec succès !'})
 
 class CategoryDetailView(generic.DetailView):
     """Generic class-based detail view for a book."""
