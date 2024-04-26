@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <!--<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />-->
 
   <title>Image gallery</title>
   {% load static %}
@@ -31,6 +31,8 @@
       <h1 class="sidebar">
         Folders
       </h1>
+      <button id="add-folder-button" class="add">Add folder</button>
+      <ul id="listing"></ul>
 
     </div>
     <div class="categories">
@@ -46,10 +48,10 @@
   </aside>
   <div id="true_body">
     <nav role="tablist">
-      <button id="tab_annotation_view" role="tab" aria-controls="annotation-view" aria-selected="true" tabindex="0">
+      <button id="tab_annotation_view" role="tab" aria-controls="annotation-view" aria-selected="true" tabindex="0" onclick="emptyExploreCategories()">
         Annotation view
       </button>
-      <button id="tab_explore" role="tab" aria-controls="explore" aria-selected="false" tabindex="-1">
+      <button id="tab_explore" role="tab" aria-controls="explore" aria-selected="false" tabindex="-1" >
         Explore
       </button>
       <header id="annotation-options" role="tabpanel" aria-labelledby="tab_annotation_view" aria-hidden="false"
@@ -70,12 +72,15 @@
         </ul>
 
         <ul id="filter-options" class="header-options">
-          <button onclick="displayGallery()" id="display-filter" class="filter">filter</button> :
-          nb Images <input type="number" onchange="updateNbImages()" min="1" value="15" id="number-of-images-filter" />
-          video <select onchange="displayGallery()" id="video-filter">
-            <option value="">--Choose a video</option>
+          
+          nb Images <input type="number" onchange="displayImages()" min="1" value="" id="number-of-images-filter" />
+          video <select onchange="refreshDisplay()" id="video-filter">
+            <option class="default" value="">--Choose a video</option>
           </select>
+          <span>
+            <button onclick="displayImages()" id="display-filter" class="filter">filter</button> :
           not annotated for :
+        </span>
         </ul>
 
         <ul id="metadata-info" class="header-info">
@@ -84,14 +89,27 @@
 
       </header>
       <header id="explore-options" role="tabpanel" aria-labelledby="tab_explore" aria-hidden="true" class="options">
-
-        <ul id="filter-options" class="header-options">
-          <button onclick="displayGallery()" id="display-filter" class="filter">filter</button> :
-          nb Images <input type="number" onchange="updateNbImages()" min="1" value="15" id="number-of-images-filter" />
-          video <select onchange="displayGallery()" id="video-filter">
-            <option value="">--Choose a video</option>
+        <ul id ="explore-mode" class="header-options">
+          <span class="head">Explore mode :</span>
+          <select onchange="refreshDisplay()" id="mode-choice">
+            <option value="by-filters">By filter</option>
+            <option value="by-frame-number"> By frame number</option>
           </select>
+          <span>video</span> <select onchange="refreshDisplay()" id="video-filter">
+            <option class="default" value="">--Choose a video</option>
+          </select>
+        </ul>
+        <ul id="filter-options" class="header-options by-filters">
+          <button onclick="displayImages()" id="display-filter" class="filter">filter</button> :
+          nb Images <input type="number" onchange="displayImages()" min="1" id="number-of-images-filter" />
           categories :
+        </ul>
+
+        <ul id="keyframe-span-selector" class="header-options by-frame-number">
+          
+          <button onclick="displayImages()" id="select-span" class="select">select</button> :
+          start n° : <input type="number" onchange="updateEndKf(); displayImages()"  min="1" id="start-kf" />
+          end n° : <input type="number" onchange="displayImages()" min="1" id="end-kf" />
         </ul>
 
         <ul id="metadata-info" class="header-info">
@@ -156,7 +174,7 @@
           <button id="close-dialog"><img src="{% static '28029-3-red-cross-file.png'%}"></button>
         </div>
         <div class="gallery-container">
-          <div class="gallery" id="selectable">
+          <div class="gallery">
 
           </div>
         </div>
