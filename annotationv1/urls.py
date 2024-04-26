@@ -29,6 +29,7 @@ urlpatterns += [
 
 urlpatterns += [
     path('fetch-models-data', views.fetch_models_data, name='fetch-models-data'),
+    path('fetch-models-data-display', views.fetch_models_data_display, name='fetch-models-data-display'),
     # Ajoutez d'autres URLS selon vos besoins
 ]
 
@@ -38,4 +39,8 @@ urlpatterns +=[
 
 urlpatterns +=[
     path('annotations-reset', views.reset_annotations, name='reset-annotations'),
+]
+
+urlpatterns +=[
+    path('create-dataset', views.create_dataset, name='create-dataset'),
 ]

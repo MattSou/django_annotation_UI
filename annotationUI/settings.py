@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'annotationV1.apps.Annotationv1Config',
+    "django_rename_app",
+    'annotationv1.apps.Annotationv1Config',
 ]
 
 MIDDLEWARE = [
@@ -73,7 +74,7 @@ WSGI_APPLICATION = 'annotationUI.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
+"""
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -81,6 +82,17 @@ DATABASES = {
         'OPTIONS' : {
             'timeout': 20,
         }
+    }
+}
+"""
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        'NAME': 'annotationdb',
+        'USER': 'msouda',
+        'PASSWORD': '#db=PROJ!',
+        'HOST': 'localhost',
+        'PORT': '5432'
     }
 }
 
@@ -122,7 +134,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #MEDIA_ROOT = '/static/images/'
-#MEDIA_URL = '/static/images/'
+MEDIA_ROOT = '/home/msouda/Datasets/'
+MEDIA_URL = '/home/msouda/Datasets/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

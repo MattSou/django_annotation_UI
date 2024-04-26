@@ -439,3 +439,10 @@ input[type="number"]{
 nav header ul{
   list-style-type: none;
 }
+
+#explore-mode .head{
+  font-weight: bold;
+}
+#mode-choice{
+  font-weight: bold;
+}

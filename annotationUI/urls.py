@@ -26,17 +26,27 @@ urlpatterns = [
 from django.urls import include
 
 urlpatterns += [
-    path('annotationV1/', include('annotationV1.urls')),
+    path('annotationv1/', include('annotationv1.urls')),
 ]
 
 from django.views.generic import RedirectView
 urlpatterns += [
-    path('', RedirectView.as_view(url='annotationV1/')),
+    path('', RedirectView.as_view(url='annotationv1/')),
 ]
 
 from django.conf import settings
 from django.conf.urls.static import static
+from django.urls import re_path
+from django.views.static import serve
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [
+        re_path(
+            r"^annotationv1/Datasets/(?P<path>.*)$",
+            serve,
+            {
+                "document_root": settings.MEDIA_ROOT,
+            },
+        ),
+    ]
