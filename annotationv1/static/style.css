@@ -4,7 +4,7 @@ body {
   height: 100%;
   position: fixed;
   display:grid;
-  grid-template: "aside true_body"/ 10% 90%;
+  grid-template: "aside true_body"/ 9% 91%;
   /*grid-template: "aside nav" 15%
   "aside main" 85%
   / 10% 90%;*/
@@ -133,8 +133,9 @@ button {
 
 .gallery .box img {
   /*object-fit: contain;
-  height: 75%;*/
-  width: 100%;
+  width: 100%;*/
+  height: 75%;
+  
   object-position: top;
 }
 
@@ -234,6 +235,34 @@ button.reset:hover{
   border: 1px solid gray;
   font-weight: bold;
 }
+button.edit{
+  border: 1px solid rgb(226, 136, 2);
+  box-shadow: inset;
+  height: 40px;
+  text-align: center;
+  width: 260px;
+  position: relative;
+  border-radius: 10px;
+}
+
+
+button.edit.disabled{
+  background-color: white;
+  color: rgb(226, 136, 2);
+}
+
+button.edit:hover{
+  border: 1px solid gray;
+  font-weight: bold;
+  background-color: rgb(226, 136, 2);
+  color: white;
+}
+
+button.edit.enabled{
+  background-color: rgb(226, 136, 2);
+  color: white;
+  border: 3px solid black;
+}
 
 button.add{
   background-color: rgb(194, 216, 113);
@@ -318,8 +347,11 @@ aside div{
 
 
 [role="dialog"][aria-hidden="false"]{
-  position:absolute;
   z-index: 1055;
+  position:fixed ;
+  top: 30%;
+  left: 15%;
+  border-radius: 3px;
   
 }
 
@@ -383,6 +415,13 @@ aside div{
   object-fit: contain;
 }
 
+.popup{
+  background-color: white;
+  border: 1px solid black;
+  align-self: center;
+  padding: 1% 1% 1% 1%;
+}
+
 #models-data{
   display:none;
 }
@@ -428,6 +467,14 @@ button.label {
   padding: 0.1rem;
 }
 
+button.label.removable {
+  border:1px dashed black;
+}
+button.label.removable:hover {
+  background-color: rgb(235, 92, 92) !important;
+}
+
+
 header #filter-options{
   position: sticky;
 }
@@ -445,4 +492,7 @@ nav header ul{
 }
 #mode-choice{
   font-weight: bold;
+}
+option.to-hide{
+  display: none;
 }

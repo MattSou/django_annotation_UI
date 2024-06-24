@@ -18,9 +18,10 @@ from django.db.models import Q
 
 def index(request):
     list_video = list(Video.objects.values())
-    
-    #list_kf = list(Keyframe.objects.all().values())
-    list_kf = list(Keyframe.objects.filter(video_id=list_video[0]['code']).values())
+    if len(list_video)==0:
+        list_kf = list(Keyframe.objects.all().values())
+    else:
+        list_kf = list(Keyframe.objects.filter(video_id=list_video[0]['code']).values())
     
     
     annotations = list(Keyframe.category.through.objects.filter(keyframe_id__in=[kf['path'] for kf in list_kf]).values())
@@ -91,8 +92,12 @@ def fetch_models_data_display2(request):
     if exploreCategories is not None:
         query = Q()
         for category in exploreCategories:
-            query |= Q(category__contains=[category])
-        kf_list += list(Keyframe.objects.filter(query).values())
+            query |= Q(category_id=category)
+        kf_list_for_query = list(Keyframe.category.through.objects.filter(query).values())
+        kf_query = Q()
+        for kf in kf_list_for_query:
+            kf_query |= Q(pk=kf['keyframe_id'])
+        kf_list += list(Keyframe.objects.filter(kf_query).values())
 
     else :
         dataset = exploreVideo.split('/')[0]
@@ -130,11 +135,17 @@ def fetch_models_data_display(request):
     print(type(exploreCategories), exploreCategories)
 
     if exploreCategories !='':
+        print('yes')
         exploreCategories = exploreCategories.split(',')
         query = Q()
         for category in exploreCategories:
-            query |= Q(category__contains=[category])
-        kf_list += list(Keyframe.objects.filter(query).values())
+            query |= Q(category_id=category)
+        kf_list_for_query = list(Keyframe.category.through.objects.filter(query).values())
+        kf_query = Q()
+        for kf in kf_list_for_query:
+            kf_query |= Q(pk=kf['keyframe_id'])
+        kf_query &= Q(video_id=exploreVideo)
+        kf_list += list(Keyframe.objects.filter(kf_query).values())
         
     else:
         #for kf in list(Keyframe.objects.values()):
@@ -175,21 +186,51 @@ def delete_category(request):
         return JsonResponse({'message': 'Instance créée avec succès !'})
     else:
         return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
-    
+
+
+def checkVideoAnnotated(video, category):
+    keyframes = Keyframe.objects.filter(video_id=video)
+    annotated = True
+    for keyframe in keyframes:
+        if not keyframe.annotated[category]:
+            annotated = False
+            break
+    video = Video.objects.get(pk=video)
+    video.annotated[category] = annotated
+    video.save()
+    return annotated
+
+
 @csrf_exempt
 def update_keyframe(request):
     if request.method == 'POST':
         data = request.POST.get('body')
         data = json.loads(data)
+        video = Keyframe.objects.get(pk=data[0]['keyframe_id']).video_id
+        category = request.POST.get('currentCategory')
         for item in data:
-            id = item['keyframe_id'].replace('./Datasets/', '')
-            if 'category' in item:
+            id = item['keyframe_id']#.replace('./Datasets/', '')
+            if 'category_id' in item:
                 model = Keyframe.objects.get(pk=id)
-                model.category.add(item['category'])
+                model.category.add(item['category_id'])
             if 'annotated' in item:
                 model = Keyframe.objects.get(pk=id)
                 model.annotated.update(item['annotated'])
             model.save()
+        checkVideoAnnotated(video, category)
+        return JsonResponse({'message': 'Instance mise à jour avec succès !', 'data': data})
+    else:
+        return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
+
+
+@csrf_exempt
+def delete_annotation(request):
+    if request.method == 'POST':
+        data = request.POST
+        keyframe_id = data.get('keyframe_id')#.replace('./Datasets/', '')
+        category = data.get('category')
+        print(Keyframe.category.through.objects.filter(keyframe_id=keyframe_id, category_id=category))
+        Keyframe.category.through.objects.filter(keyframe_id=keyframe_id, category_id=category).delete()
         return JsonResponse({'message': 'Instance mise à jour avec succès !', 'data': data})
     else:
         return JsonResponse({'error': 'Méthode non autorisée', 'method':request.method, 'data': str(request.body)}, status=405)
@@ -201,6 +242,7 @@ def reset_annotations(request):
     for annotation in annotations:
         annotation.delete()
     Keyframe.objects.all().update(annotated=ann_dic)
+    print(ann_dic)
     return JsonResponse({'message': 'Annotations réinitialisées avec succès !'})
 
 

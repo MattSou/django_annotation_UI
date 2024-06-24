@@ -67,6 +67,8 @@ class Video(models.Model):
 
     name = models.CharField(max_length=200, help_text='channel_YYYYMMDDThhmmss format', null=True)
 
+    annotated = models.JSONField(default=default_annotated, null=True)
+
     def display_keyframe(self):
         """Creates a string for the Genre. This is required to display genre in Admin."""
         return ', '.join([keyframe.name for keyframe in self.keyframe_set.all()[:3]])
