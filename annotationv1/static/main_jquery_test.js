@@ -4,6 +4,7 @@ let currentExploreVideo;
 let annotationNbImages = $("#annotation-options #number-of-images-filter").val();
 let exploreNbImages = $("#explore-options #number-of-images-filter").val();
 let exploreCategories = [];
+let notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
 
 const colorDict = {
     0: '#2080d8',
@@ -38,8 +39,8 @@ function generateCategoryColors() {
   
 $(document).ready(function (){
     modelsDataToActualize = JSON.parse($("#models-data").text());
-    console.log(modelsDataToActualize);
-    //console.log(modelsDataToActualize.keyFrame.filter(function (kf) { return kf.name == "fr2_20220421T224335_s2998_f0"}));
+    //console.log(modelsDataToActualize);
+    ////console.log(modelsDataToActualize.keyFrame.filter(function (kf) { return kf.name == "fr2_20220421T224335_s2998_f0"}));
     $('input#start-kf').val(1);
     $('input#end-kf').val(1);
     $('#annotation-options #filter-options #number-of-images-filter').val(15);
@@ -56,7 +57,7 @@ $(document).ready(function (){
     
     $("#add-category-button").on('click', function() {
         $("[role='dialog']#create-category").attr('aria-hidden', 'false');
-        console.log('adding event listener');
+        //console.log('adding event listener');
         
     });
     $("[role='dialog']#create-category").find("form.create-category").on('submit', function(e) {
@@ -80,44 +81,94 @@ $(document).ready(function (){
             return;
         }
         else{
-            //console.log($("button.category.selected").text());
-            //console.log(modelsDataToActualize.category);
-            $(".box.ui-selected").each(function() {
-                //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
-                //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
-                //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
-                const annotation = {
-                    keyframe_id: $(this).find('img').attr('src'),
-                    category: currentCategory,
-                };
-                //console.log(annotation);
-                annotations.push(annotation);
-            });
             if ($("#fast-annotation").is(':checked')){
-                $('.box.selectable img').each(function() {
+            ////console.log($("button.category.selected").text());
+            ////console.log(modelsDataToActualize.category);
+                $("#annotation-view .box.ui-selected").each(function() {
                     //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
                     //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
                     //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
                     const annotation = {
-                        keyframe_id: $(this).attr('src'),
+                        keyframe_id: $(this).find('img').attr('src').replace('./Datasets/', ''),
+                        category_id: currentCategory,
+                    };
+                    ////console.log(annotation);
+                    annotations.push(annotation);
+                    modelsDataToActualize.annotations.push(annotation);
+                });
+                
+                $('#annotation-view .box.selectable img').each(function() {
+                    //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
+                    //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
+                    //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
+                    const annotation = {
+                        keyframe_id: $(this).attr('src').replace('./Datasets/', ''),
                         annotated: {[currentCategory]: true},
                     };
-                    //console.log(annotation);
+                    ////console.log(annotation);
                     annotations.push(annotation);
+                    modelsDataToActualize.keyFrame.find(function(kf){return annotation.keyframe_id.endsWith(kf.path)}).annotated[currentCategory] = true;
                 });
+        } else {
+            $("#annotation-view .box.ui-selected").each(function() {
+                //let existingAnnotation = modelsDataToActualize.annotations.find(function(annot){return annot.keyframe_id == node.find('img').attr('src')});
+                //let existingCategories = (existingAnnotation) ? existingAnnotation.each(function(annot){return annot.category}) : [];
+                //existingCategories.push(modelsDataToActualize.category.find(function(category){return category.name == $("button.category.selected").text()}).id);
+                const annotation = {
+                    keyframe_id: $(this).find('img').attr('src').replace('./Datasets/', ''),
+                    category_id: currentCategory,
+                };
+                const annotation2 = {
+                    keyframe_id: $(this).find('img').attr('src').replace('./Datasets/', ''),
+                    annotated: {[currentCategory]: true},
+                };
+                ////console.log(annotation);
+                annotations.push(annotation, annotation2);
+                modelsDataToActualize.annotations.push(annotation);
+                modelsDataToActualize.keyFrame.find(function(kf){return annotation.keyframe_id.endsWith(kf.path)}).annotated[currentCategory] = true;
+            });
         }
-            //console.log(annotations);
-            //console.log(currentCategory);
+        console.log(annotations);
+            ////console.log(annotations);
+            ////console.log(currentCategory);
             sendAnnotationRequest(annotations);
             
         }
     });
 
     $('#reset-annotations').on('click', sendResetAnnotationsRequest);
+    $('#explore-options #edit-annotations').on('click', enableEditAnnotations);
+    $('#annotation-options #edit-annotations').on('click', enableEditAnnotations);
     $("#add-folder-button").on('click', addFolder);
     testFilePicker();
     
-})    
+})
+
+function enableEditAnnotations(e){
+    const butt = $(e.target);
+    if (butt.hasClass('disabled')){
+        $("button.label").each(function(_,b) {
+            $(b).addClass('removable');
+        });
+        butt.removeClass('disabled').addClass('enabled');
+        $("#edit-disabled-popup").attr('aria-hidden', true);
+        $('#edit-enabled-popup').attr('aria-hidden', false);
+        setTimeout(function() {
+            $('#edit-enabled-popup').attr('aria-hidden', true);
+        }, 2000);
+    } else {
+        $("button.label").each(function(_,b) {
+            $(b).removeClass('removable');
+        });
+        butt.removeClass('enabled').addClass('disabled');
+        butt.attr('aria-hidden', true);
+        $("#edit-disabled-popup").attr('aria-hidden', false);
+        setTimeout(function() {
+            $("#edit-disabled-popup").attr('aria-hidden', true);
+        }, 2000);
+    }
+}
+
 
 function displayImages(){
     displayAnnotationGallery();
@@ -142,15 +193,35 @@ function appendImages(images, container) {
 
 function fetchVideos(){
     //$("select#video-filter").find("*").not(".default").remove();
-    //console.log($("select#video-filter").find("*").not(".default"));
-    //console.log($("select#video-filter"));
-    //console.log(modelsDataToActualize.video);
-    let videos = modelsDataToActualize.video
+    ////console.log($("select#video-filter").find("*").not(".default"));
+    ////console.log($("select#video-filter"));
+    ////console.log(modelsDataToActualize.video);
+    notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
+    let videos = modelsDataToActualize.video.sort((a,b)=>{return a.name.localeCompare(b.name)});
+    console.log(videos);
+    let videosToRemove = [];
+    if (notAnnotatedCats.length > 0){
+        videosToRemove = videos.filter(function(video){return notAnnotatedCats.some(function(cat){return video.annotated[cat] === true})});
+        videos = videos.filter(function(video){return !videosToRemove.includes(video)});
+    }
+    console.log(videosToRemove);
+    console.log(videos);
     $.each(videos, function (_, video) { 
-        //console.log($("select#video_filter"));
-        //console.log($("select#video-filter"))
+        //console.log(_);
+        ////console.log($("select#video_filter"));
+        ////console.log($("select#video-filter"))
         if ($("#annotation-options select#video-filter").find(`option[value="${video.code}"]`).length === 0){
+            //console.log(video.code, video.name);
             $("select#video-filter").append($('<option>').attr('value', video.code).text(video.name));
+        }
+        else {
+            $("select#video-filter").find(`option[value="${video.code}"]`).removeClass("to-hide");
+        }
+    });
+    $.each(videosToRemove, function (_, video) {
+        //console.log($("#annotation-options select#video-filter").find(`option[value="${video.code}"]`));
+        if ($("#annotation-options select#video-filter").find(`option[value="${video.code}"]`).length > 0){
+            $("select#video-filter").find(`option[value="${video.code}"]`).addClass("to-hide");
         }
     });
     
@@ -178,7 +249,11 @@ function computeKfIndex(keyframes){
 }
 
 function filterVideos(){
-    exploreCategories = $('#explore-options input.category-filter:checked').map(function(){return $(this).attr('id')}).get();
+    if ($("#tab_explore").attr('aria-selected') === 'true'){
+        exploreCategories = $('#explore-options input.category-filter:checked').map(function(){return $(this).attr('id')}).get();
+    } else {
+        exploreCategories = [];
+    }
     const listVideos = modelsDataToActualize.video;
     if (!($("#annotation-options select#video-filter").val()==="")){
         currentAnnotationVideo = $("#annotation-options select#video-filter").val();
@@ -208,17 +283,17 @@ function displayAnnotationGallery(){
     let listKf = modelsDataToActualize.keyFrame 
     listKf = computeKfIndex(listKf);
     updateNbImages();
+    //notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
     
     $('#annotation-view .gallery').empty();
-    const notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
-    //console.log($("select#video-filter").prop('selectedIndex'));
+    ////console.log($("select#video-filter").prop('selectedIndex'));
     listKf.sort(function(a, b) {
         return (a.video_id.localeCompare(b.video_id) === 0) ? a.timecode.localeCompare(b.timecode) : a.video_id.localeCompare(b.video_id);
     })
     if (!($("#annotation-options select#video-filter").val()==="")){
         currentAnnotationVideo = $("#annotation-options select#video-filter").val();
-        //console.log(notAnnotatedCats);
-        //console.log(currentVideo);
+        ////console.log(notAnnotatedCats);
+        ////console.log(currentVideo);
         listKf = listKf.filter(function (kf) {
             return kf.video_id === currentAnnotationVideo;
         });
@@ -229,30 +304,44 @@ function displayAnnotationGallery(){
     listKf = listKf.filter(function (kf) {
         return notAnnotatedCats.every(function(cat){return kf.annotated[cat] === false});
     });
+    let index = entireKf.findIndex(function(kf){return kf.path == listKf[0].path});
+    let start = 0;
+    if (notAnnotatedCats.length === 0){
+        start = parseInt($('input#start-kf').val())-1;
+        index = start-1;
+    } else {
+        $('input#start-kf').val(index+1);
+    }
     
-    listKf = listKf.slice(0, annotationNbImages);
+    listKf = listKf.slice(start, parseInt(annotationNbImages)+start);
+    console.log(annotationNbImages, start, listKf.length);
     
-    //console.log(listKf);
+    ////console.log(listKf);
     const existingAnnotations = modelsDataToActualize.annotations;
-    //console.log(existingAnnotations);
+    ////console.log(existingAnnotations);
     listKf = listKf.map(function (kf) {
         let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
-        //console.log(kf, annot);
+        ////console.log(kf, annot);
         //kf.category = annot.map(function(annot){return annot.category});
         return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
         });
     console.log(listKf);
-    const index = entireKf.findIndex(function(kf){return kf.path == listKf[0].path});
+    if (listKf.length === 0){
+        $('#annotation-options #images-counter').text(`No key frame for this filter on ${N} (total)`);
+        return;
+    }
+    //const index = entireKf.findIndex(function(kf){return kf.path == listKf[0].path});
     const othernbImages = annotationNbImages-1;
     $('#annotation-options #images-counter').text(`Key frames ${index+1} - ${index+othernbImages+1} / ${N}`)
+    $('#annotation-options #video-name').text(`${currentAnnotationVideo}`.split('/')[1]);
     $('#annotation-view .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
-    //console.log($('#annotation-view .gallery').css('grid-template'));
+    ////console.log($('#annotation-view .gallery').css('grid-template'));
     $.each((listKf), function (_, kf) { 
-        //console.log(kf.category.map(function(cat){return 'youpi'}));
+        ////console.log(kf.category.map(function(cat){return 'youpi'}));
         $('#annotation-view .gallery').append($('<div>').addClass('box selectable').append(
             $('<img>').attr('src', `./Datasets/${kf.path}`)).append(
                 $('<ul>').addClass('img-label').append(
-                    kf.category.map(createLabelList)
+                    kf.category.map(createAnnotationLabelList)
                     ),
                 $('<ul>').addClass('img-metadata').append(
                     $('<li>').text(`${kf.video_id}`),
@@ -291,8 +380,8 @@ function updateEndKf(){
     const start = $('input#start-kf').val();
     const end = $('input#end-kf').val();
     $('input#end-kf').attr('min', start);
-    //console.log(end, start, end < start);
-    if (end < start){
+    //console.log(end, start, +end < +start);
+    if (+end < +start){
         $('input#end-kf').val(start);
     }
 }
@@ -301,18 +390,18 @@ function displayExploreGallery(){
     changeExploreMode();
     let listKf = modelsDataToActualize.keyFrame 
     listKf = computeKfIndex(listKf);
-    console.log(listKf);
+    //console.log(listKf);
     
     $('#explore .gallery').empty();
-    //console.log($("select#video-filter").prop('selectedIndex'));
+    ////console.log($("select#video-filter").prop('selectedIndex'));
     listKf.sort(function(a, b) {
         return (a.video_id.localeCompare(b.video_id) === 0) ? a.timecode.localeCompare(b.timecode) : a.video_id.localeCompare(b.video_id);
     })
-    //console.log($("#explore-options select#video-filter"));
+    ////console.log($("#explore-options select#video-filter"));
     if (!($("#explore-options select#video-filter").val()==="")){
         currentExploreVideo = $("#explore-options select#video-filter").val();
-        //console.log(notAnnotatedCats);
-        //console.log(currentVideo);
+        ////console.log(notAnnotatedCats);
+        ////console.log(currentVideo);
         listKf = listKf.filter(function (kf) {
             return kf.video_id === currentExploreVideo;
         });
@@ -321,14 +410,14 @@ function displayExploreGallery(){
     const existingAnnotations = modelsDataToActualize.annotations;
     listKf = listKf.map(function (kf) {
         let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
-        //console.log(kf, annot);
+        ////console.log(kf, annot);
         //kf.category = annot.map(function(annot){return annot.category});
         return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
         });
-    console.log(listKf);
+    //console.log(listKf);
 
     const exploreMode = $("#explore-options select#mode-choice").val();
-    //console.log(exploreMode);
+    ////console.log(exploreMode);
     
     //const entireKf = listKf;
     let othernbImages;
@@ -370,23 +459,23 @@ function displayExploreGallery(){
         }
 
     }
-    //console.log(existingAnnotations);
+    ////console.log(existingAnnotations);
     listKf = listKf.map(function (kf) {
         let annot = existingAnnotations.filter(function(a){return a.keyframe_id == kf.path});
-        //console.log(kf, annot);
+        ////console.log(kf, annot);
         //kf.category = annot.map(function(annot){return annot.category});
         return {...kf, 'category': annot.map(function(annot){return annot.category_id})};
         });
     
     $('#explore .gallery').css({'grid-template': `repeat(${(((othernbImages-othernbImages%5))/5)+1},220px)/ repeat(5, 320px)`});
-    //console.log($('#explore .gallery').css('grid-template'));
-    //console.log(listKf);
+    ////console.log($('#explore .gallery').css('grid-template'));
+    ////console.log(listKf);
     $.each((listKf), function (_, kf) { 
-        //console.log(kf.category.map(function(cat){return 'youpi'}));
+        ////console.log(kf.category.map(function(cat){return 'youpi'}));
         $('#explore .gallery').append($('<div>').addClass('box selectable').append(
             $('<img>').attr('src', `./Datasets/${kf.path}`)).append(
                 $('<ul>').addClass('img-label').append(
-                    kf.category.map(createLabelList)
+                    kf.category.map(createExploreLabelList)
                 ),
                     $('<ul>').addClass('img-metadata').append(
                         $('<li>').text(`${kf.video_id}`),
@@ -407,18 +496,62 @@ function displayExploreGallery(){
 
 }
 
-function createLabelList(cat){
+function createAnnotationLabelList(cat){
     const color = categoryColors[cat];
-    //console.log(color, cat)
+    ////console.log(color, cat)
     return $('<li>').append(createSvgLabel(cat).css({'fill': color, 'stroke': color}))
-                    .append($('<button>').addClass('label').attr('id', cat).text(cat).css({'background-color': color}));
+                    .append($('<button>').addClass('label').attr('id', cat).text(cat).css({'background-color': color}).on('click', function(e){
+                        if ($('#annotation-options #edit-annotations').hasClass('enabled')){
+                            e.preventDefault();
+                            const annotation = {
+                                keyframe_id: $(e.target).parent().parent().siblings('img').attr('src').replace('./Datasets/', ''),
+                                category: cat,
+                            }
+                            console.log(annotation);
+                            sendDeleteAnnotationRequest(annotation);
+                            modelsDataToActualize.annotations = modelsDataToActualize.annotations.filter(
+                                function(annot){return (annot.keyframe_id != annotation.keyframe_id || annot.category_id != annotation.category)}
+                            );
+                            setTimeout(function(){
+                                console.log($("#annotation-view button.label"));
+                                $("#annotation-view button.label").each(function(_,b) {
+                                    $(b).addClass('removable');
+                                });
+                            }, 100);
+                        }
+                    }));
 }
-
+function createExploreLabelList(cat){
+    const color = categoryColors[cat];
+    ////console.log(color, cat)
+    return $('<li>').append(createSvgLabel(cat).css({'fill': color, 'stroke': color}))
+                    .append($('<button>').addClass('label').attr('id', cat).text(cat).css({'background-color': color}).on('click', function(e){
+                        if ($('#explore-options #edit-annotations').hasClass('enabled')){
+                            e.preventDefault();
+                            const annotation = {
+                                keyframe_id: $(e.target).parent().parent().siblings('img').attr('src').replace('./Datasets/', ''),
+                                category: cat,
+                            }
+                            console.log(annotation);
+                            sendDeleteAnnotationRequest(annotation);
+                            modelsDataToActualize.annotations = modelsDataToActualize.annotations.filter(
+                                function(annot){return (annot.keyframe_id != annotation.keyframe_id || annot.category_id != annotation.category)}
+                            );
+                            
+                            setTimeout(function(){
+                                console.log($("#explore button.label"));
+                                $("#explore button.label").each(function(_,b) {
+                                    $(b).addClass('removable');
+                                });
+                            }, 100);
+                        }
+                    }));
+}
 
 function updateNbImages(){
     annotationNbImages = $("#annotation-options #number-of-images-filter").val();
     exploreNbImages = $("#explore-options #number-of-images-filter").val();
-    //console.log(nbImages);
+    ////console.log(nbImages);
 }
 
 
@@ -449,14 +582,18 @@ function tabChange() {
         const selectedTabpanels = $(`[role="tabpanel"][aria-labelledby="${label}"]`).get();
         //console.log(selectedTabpanels);
         $.each(selectedTabpanels, function (_, tabpanel){$(tabpanel).attr('aria-hidden', false).siblings('[role="tabpanel"]').attr('aria-hidden', true)});
-        $(e.target).attr('aria-selected', true).attr('tabindex', 0).siblings().attr('aria-selected', false).attr('tabindex', -1);
-        changeExploreMode();
+        //console.log(e.target);
+        if (e.target.role === 'tab') {
+            $(e.target).attr('aria-selected', true).attr('tabindex', 0).siblings().attr('aria-selected', false).attr('tabindex', -1);
+            changeExploreMode();
+        }
+
     }
 }
 
 function selectCat() {
     const categoryButtons = $('nav header #choose-category button.category');
-    //console.log(categoryButtons);
+    ////console.log(categoryButtons);
     categoryButtons.on('click', selectThisCategory);
 }
 
@@ -492,11 +629,11 @@ function sendCreateRequest(name, description) {
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
-            //console.log("Instance créée avec succès !");
+            ////console.log("Instance créée avec succès !");
             
         },
         error: function(xhr, status, error) {
-            //console.error("Erreur lors de la création de l'instance :", xhr.status);
+            ////console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
     setTimeout(refreshDisplay, 100);
@@ -523,7 +660,7 @@ function refreshData() {
 
         },
         error: function(xhr, status, error) {
-            //console.error("Fetch error :", xhr.status);
+            ////console.error("Fetch error :", xhr.status);
         }
     });
     //setTimeout(selectCat, 100)
@@ -532,11 +669,13 @@ function refreshData() {
 
 function refreshDisplay() {
     filterVideos();
+    console.log(exploreCategories);
+    notAnnotatedCats = $('#annotation-options input.not-annotated-filter:checked').map(function(){return $(this).attr('id')}).get();
     const data = new FormData();
     data.append('annotationVideo', currentAnnotationVideo);
     data.append('exploreVideo', currentExploreVideo);
     data.append('exploreCategories', exploreCategories);
-    console.log(currentAnnotationVideo, currentExploreVideo, exploreCategories);
+    //console.log(currentAnnotationVideo, currentExploreVideo, exploreCategories);
     $.ajax({
         type: "POST",
         url: "./fetch-models-data-display",
@@ -547,9 +686,11 @@ function refreshDisplay() {
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
-            console.log(response.modelsData);
-            console.log(response.data);
+            console.log(response)
+            //console.log(response.modelsData);
+            //console.log(response.data);
             modelsDataToActualize = response.modelsData;
+        
             setTimeout(generatefullHTML, 100);
             /*setTimeout(function (){
                 displayAnnotationGallery();
@@ -559,7 +700,7 @@ function refreshDisplay() {
 
         },
         error: function(xhr, status, error) {
-            //console.error("Fetch error :", xhr.status);
+            ////console.error("Fetch error :", xhr.status);
         }
     });
     //setTimeout(selectCat, 100)
@@ -584,7 +725,7 @@ function treatCategories(categories) {
         chooseCategories.append(catButton);
 
         const catLink = $('<li>').addClass('lozad');
-        //console.log(categoryColors[category.name])
+        ////console.log(categoryColors[category.name])
         const link = $('<a>').addClass('lozad').addClass('button label').attr('href', `./category/${category.name}`).attr('target', '_blank').text(category.name).css({'background-color': categoryColors[category.name]});
         catLink.append(link);
         sidebarCategories.append(catLink);
@@ -646,10 +787,10 @@ function sendDeleteRequest(name) {
         },
         success: function(response) {
             
-            //console.log("Instance créée avec succès !");
+            ////console.log("Instance créée avec succès !");
         },
         error: function(xhr, status, error) {
-            //console.error("Erreur lors de la création de l'instance :", xhr.status);
+            ////console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
     setTimeout(refreshDisplay, 100);
@@ -659,6 +800,7 @@ function sendDeleteRequest(name) {
 function sendAnnotationRequest(annotations) {
     const data = new FormData();
     data.append('body', JSON.stringify(annotations));
+    data.append('currentCategory', $("button.category.selected").text());
 
     $.ajax({
         type: "POST",
@@ -670,13 +812,40 @@ function sendAnnotationRequest(annotations) {
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
-            console.log("Instance créée avec succès !");
-            console.log(response);
-            setTimeout(refreshDisplay, 50);
+            //console.log("Instance créée avec succès !");
+            //console.log(response);
+            setTimeout(displayImages, 50);
             
         },
         error: function(xhr, status, error) {
-            console.error("Erreur lors de la création de l'instance :", xhr.status);
+            //console.error("Erreur lors de la création de l'instance :", xhr.status);
+        }
+    });
+    ;
+}
+
+function sendDeleteAnnotationRequest(annotation) {
+    const data = new FormData();
+    data.append('keyframe_id', annotation.keyframe_id);
+    data.append('category', annotation.category);
+
+    $.ajax({
+        type: "POST",
+        url: "./annotation/delete",
+        data: data,
+        processData: false,
+        contentType: false,
+        beforeSend: function(xhr, settings) {
+            xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
+        },
+        success: function(response) {
+            //console.log("Instance créée avec succès !");
+            //console.log(response);
+            displayImages();
+            
+        },
+        error: function(xhr, status, error) {
+            //console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
     ;
@@ -700,6 +869,12 @@ function getCookie(name) {
 function generatefullHTML(){
     generateCategoryColors();
     treatCategories(modelsDataToActualize.category);
+    $.each(notAnnotatedCats, function(_, cat){
+        $('#annotation-options input.not-annotated-filter').filter(function(){return $(this).attr('id') == cat}).prop('checked', true);
+    });
+    $.each(exploreCategories, function(_, cat){
+        $('#explore-options input.category-filter').filter(function(){return $(this).attr('id') == cat}).prop('checked', true);
+    });
     //loadImagesFromData();
     fetchVideos();
     //selectCat();
@@ -719,15 +894,16 @@ function sendResetAnnotationsRequest() {
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
-            console.log("Annotations réinitialisées");
-            console.log(response);
+            setTimeout(refreshDisplay, 50);
+            //console.log("Annotations réinitialisées");
+            //console.log(response);
             
         },
         error: function(xhr, status, error) {
-            console.error("Erreur lors de la création de l'instance :", xhr.status);
+            //console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
-    setTimeout(refreshDisplay, 50);
+    
     
 }
 
@@ -783,14 +959,14 @@ async function testDirectoryPicker(){
     // Récupère l'URL du dossier sélectionné
     const directoryUrl = directoryPicker.name;
     
-    console.log("URL du dossier sélectionné :", directoryUrl);
-    console.log(directoryPicker.keys());
+    //console.log("URL du dossier sélectionné :", directoryUrl);
+    //console.log(directoryPicker.keys());
     let c=0;
     for await (const key of directoryPicker.keys()) {
-        console.log(key);
+        //console.log(key);
         c++;
       }
-    console.log(c);
+    //console.log(c);
 
 }
 
@@ -800,10 +976,10 @@ function testFilePicker(){
     "change",
     (event) => {
      // let output = $("#listing");
-      console.log(event.target.files[0].webkitRelativePath);
-      //console.log(event.target);
+      //console.log(event.target.files[0].webkitRelativePath);
+      ////console.log(event.target);
       //$.each(event.target.files, function(_, file) {
-        //console.log(file, file.webkitRelativePath);
+        ////console.log(file, file.webkitRelativePath);
         //output.append($('<li>').text(file.webkitRelativePath));
       //}
     //);
@@ -822,9 +998,9 @@ async function addFolder(){
 function sendCreateDatasetRequest(name){
     const data = new FormData();
     data.append('name', name);
-    console.log(name);
+    //console.log(name);
     data.append('currentCategories', modelsDataToActualize.category.map(function(cat){return cat.name}));
-    console.log(modelsDataToActualize.category.map(function(cat){return cat.name}));
+    //console.log(modelsDataToActualize.category.map(function(cat){return cat.name}));
 
     $.ajax({
         type: "POST",
@@ -836,13 +1012,13 @@ function sendCreateDatasetRequest(name){
             xhr.setRequestHeader("X-CSRFToken", getCookie("csrftoken"));
         },
         success: function(response) {
-            console.log("Instance créée avec succès !");
-            console.log(response);
+            //console.log("Instance créée avec succès !");
+            //console.log(response);
             autoRefresh();
             
         },
         error: function(xhr, status, error) {
-            console.error("Erreur lors de la création de l'instance :", xhr.status);
+            //console.error("Erreur lors de la création de l'instance :", xhr.status);
         }
     });
     //setTimeout(refreshDisplay, 100);
