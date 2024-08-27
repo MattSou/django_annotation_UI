@@ -90,7 +90,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         'NAME': 'annotationdb',
         'USER': 'msouda',
-        'PASSWORD': '#db=PROJ!',
+        'PASSWORD': 'achanger',
         'HOST': 'localhost',
         'PORT': '5432'
     }
