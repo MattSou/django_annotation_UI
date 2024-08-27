@@ -54,24 +54,24 @@ The current database structure is meant to be as follows :
 
 You can change it but you'll have to change the definition of the models in the `annotationV1/models.py|` file.
 
-### Run the annotation UI
+## Run the annotation UI
 
 ```bash
 python manage.py runserver
 ```
 
-### Save the database in a JSON file
+## Save the database in a JSON file
 ```bash
 python manage.py dumpdata --output [DUMP.json]
 ```
 An exemple of such a file is given `example.json`. It also contains the information about admin et permissions in your database (not included in the example file).
 
-### Reset the database
+## Reset the database
 ```bash
 python reset_db_psql.py
 ```
 
-### Load existing data
+## Load existing data
 ```bash
 python manage.py loaddata [DATA.json]
 ```
