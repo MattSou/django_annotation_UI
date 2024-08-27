@@ -30,7 +30,7 @@ Then you create a database this user will own.
 
 ```sql
 CREATE DATABASE annotationdb OWNER username;
-\q
+\q;
 ```
 
 Then, in the annotationUI/settings.py file, you change it as follows :
