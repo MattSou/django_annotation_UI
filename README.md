@@ -10,7 +10,7 @@ pip install -r requirements.txt
 
 ### PostgreSQL database set up
 
-On its latest version, the annotation UI is meant to be used along a PostrgeSQL database, that you have to set up before using the UI.
+On its latest version, the annotation UI is meant to be used along a PostrgeSQL database, which you have to set up before using the UI.
 
 To install PostrgreSQL on Linux : 
 ```bash
@@ -33,7 +33,7 @@ CREATE DATABASE annotationdb OWNER username;
 \q;
 ```
 
-Then, in the annotationUI/settings.py file, you change it as follows :
+Then, in the `annotationUI/settings.py` file, you change it as follows :
 
 ```python
 DATABASES = {
@@ -52,7 +52,7 @@ DATABASES = {
 ### Database structure
 The current database structure is meant to be as follows : 
 
-You can change it but you'll have to change the definition of the models in the `annotationV1/models.py|` file.
+You can change it but you'll have to change the definition of the models in the `annotationV1/models.py` file.
 
 ## Run the annotation UI
 
@@ -62,7 +62,7 @@ python manage.py runserver
 
 ## Save the database in a JSON file
 ```bash
-python manage.py dumpdata --output [DUMP.json]
+python manage.py dumpdata --output DUMP.json
 ```
 An exemple of such a file is given `example.json`. It also contains the information about admin et permissions in your database (not included in the example file).
 
@@ -73,6 +73,6 @@ python reset_db_psql.py
 
 ## Load existing data
 ```bash
-python manage.py loaddata [DATA.json]
+python manage.py loaddata DATA.json
 ```
-Make sure `DATA.json` is well formated (as `example.json`)
+Make sure `DATA.json` is well formated (like `example.json`).
